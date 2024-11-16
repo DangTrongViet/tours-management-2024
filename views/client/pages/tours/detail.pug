@@ -1,0 +1,71 @@
+extends ../../layouts/default.pug
+
+include ../../mixins/box-head.pug
+include ../../mixins/moment.pug
+block main 
+    div(
+        class="alert alert-success alert-hidden"
+        alert-add-cart-success 
+    ) Đã thêm vào giỏ hàng! <span close-alert>x</span>
+
+    .tour-detail
+        .container.my-3 
+            .row 
+                .col-6
+                    if(tourDetail.images)
+                            .inner-images 
+                                div(class="swiper imagesMain")
+                                    div(class="swiper-wrapper")
+                                        each images in tourDetail.images 
+                                            div(class="swiper-slide")
+                                                .inner-image 
+                                                    img(src=images)
+                                    div(class="swiper-button-next")
+                                    div(class="swiper-button-prev")
+                                div(class="swiper imagesThumb")
+                                    div(class="swiper-wrapper")
+                                        each image in tourDetail.images
+                                            div(class="swiper-slide")
+                                                .inner-image 
+                                                    img(src=image)
+                .col-6 
+                    .inner-title #{tourDetail.title}
+                    .inner-barcode 
+                        <i class="fa-solid fa-barcode"></i> Mã tour: #{tourDetail.code}
+                    .inner-time-start   
+                        <i class="fa-solid fa-colendar-days"></i> Lịch khởi hành: 
+                        +formatDatetime(tourDetail.timeStart)
+                    .inner-stock 
+                        <i class="fa-solid fa-person-walking-luggage"></i> Còn lại: #{tourDetail.stock}
+
+                    .inner-price-special #{tourDetail.price_special.toLocaleString()}đ
+                    .inner-price #{tourDetail.price.toLocaleString()}đ
+                    .inner-percent Giảm tới #{tourDetail.discount}%
+                    
+                    form(
+                        form-add-to-cart 
+                        tour-id=tourDetail.id
+                    )    
+                        input(
+                            class="form-control mb-2"
+                            type="number"
+                            name="quantity"
+                            value="1"
+                            min="1"
+                            max=tourDetail.quantity
+                        )
+                        button(
+                            type="submit"
+                            class="btn btn-success btn-block"
+                        ) Thêm vào giỏ hàng
+                .row
+                    .col-12
+                        .inner-information
+                            .inner-label Thông tin tour
+                            .inner-text
+                                | !{tourDetail.information}
+                    .col-12
+                        .inner-information
+                            .inner-label Lịch trình tour
+                            .inner-text
+                                | !{tourDetail.schedule}

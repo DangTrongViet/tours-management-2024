@@ -1,0 +1,281 @@
+/* Header */
+.header {
+    border-bottom: 1px solid #ddd;
+    padding: 10px 0;
+    background-color: #f8f8f8; /* Màu nền nhẹ để tạo sự khác biệt với nội dung */
+}
+
+/* Điều chỉnh kích thước logo trong header */
+.header .inner-logo {
+    max-width: 150px; /* Đặt chiều rộng tối đa của logo */
+    overflow: hidden; /* Ẩn phần ảnh vượt quá giới hạn */
+}
+
+.header .inner-logo img {
+    width: 100%; /* Ảnh sẽ chiếm toàn bộ chiều rộng của phần chứa */
+    height: auto; /* Duy trì tỷ lệ của ảnh */
+    object-fit: contain; /* Giúp ảnh thu nhỏ để vừa với phần chứa mà không bị cắt */
+}
+
+.header .inner-menu > ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+}
+
+.header .inner-menu > ul > li {
+    margin-left: 20px;
+    font-size: 1rem;
+    color: #333;
+    transition: color 0.3s ease;
+}
+
+.header .inner-menu > ul > li:hover {
+    color: #007bff;
+}
+/* End header */
+
+/* Footer */
+.footer {
+    background: #333;
+    color: #fff;
+    text-align: center;
+    padding: 20px 0;
+    font-size: 0.9rem;
+    margin-top: 30px;
+}
+
+.footer a {
+    color: #ddd;
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.footer a:hover {
+    color: #fff;
+}
+/* End Footer */
+
+/* Box Head */
+.box-head {
+    margin-bottom: 30px;
+}
+
+.box-head .inner-title {
+    margin-bottom: 0;
+    font-size: 28px;
+    font-weight: 600;
+    color: green;
+}
+/* End Box Head */
+
+/* Tổng thể tour-detail */
+.tour-detail {
+    margin-top: 20px;
+    font-family: Arial, sans-serif;
+}
+
+/* Container chính */
+.container {
+    background-color: #f9f9f9;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    max-width: 1200px; /* Đảm bảo container không quá rộng */
+    margin: 0 auto; /* Canh giữa container */
+}
+
+/* Hàng chính chứa hình ảnh và thông tin */
+.row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+/* Cột chứa hình ảnh */
+.col-6:first-child {
+    flex: 1;
+    max-width: 48%; /* Đảm bảo cột không chiếm quá nhiều không gian */
+}
+
+/* Cột chứa thông tin chi tiết tour */
+.col-6:last-child {
+    flex: 1;
+    max-width: 48%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+/* Hình ảnh của tour */
+.inner-images {
+    margin-bottom: 15px;
+    overflow: hidden;
+    border-radius: 8px;
+}
+
+.inner-image img {
+    width: 100%;
+    height: auto;
+    display: block;
+    object-fit: cover;
+    border-radius: 8px;
+    transition: transform 0.3s ease; /* Hiệu ứng khi hover */
+}
+
+.inner-image img:hover {
+    transform: scale(1.05);
+}
+
+/* Thông tin bên phải */
+.inner-title {
+    font-size: 1.8rem;
+    font-weight: bold;
+    margin-bottom: 10px;
+    color: #333;
+}
+
+.inner-barcode,
+.inner-time-start,
+.inner-stock {
+    font-size: 1rem;
+    margin-bottom: 10px;
+    color: #555;
+}
+
+.inner-barcode i,
+.inner-time-start i,
+.inner-stock i {
+    color: #007bff;
+    margin-right: 8px;
+}
+
+/* Giá và giảm giá */
+.inner-price-special {
+    font-size: 1.6rem;
+    color: #ff4d4f;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.inner-price {
+    font-size: 1.2rem;
+    text-decoration: line-through;
+    color: #999;
+    margin-bottom: 10px;
+}
+
+.inner-percent {
+    font-size: 1rem;
+    color: #28a745;
+    font-weight: bold;
+    margin-bottom: 20px;
+}
+
+/* Form thêm vào giỏ hàng */
+form[form-add-to-cart] {
+    margin-top: 15px;
+}
+
+.form-control {
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    margin-bottom: 10px;
+}
+
+.btn-success {
+    background-color: #28a745;
+    border: none;
+    padding: 10px;
+    font-size: 1.1rem;
+    border-radius: 5px;
+    cursor: pointer;
+    width: 100%;
+    transition: background-color 0.3s ease, transform 0.3s ease;
+}
+
+.btn-success:hover {
+    background-color: #218838;
+    transform: scale(1.02);
+}
+
+/* Phần thông tin tour và lịch trình bên dưới */
+.inner-information {
+    margin-top: 25px;
+    padding: 20px;
+    background-color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.inner-label {
+    font-size: 1.4rem;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 10px;
+    border-bottom: 2px solid #ddd;
+    padding-bottom: 5px;
+}
+
+.inner-text {
+    font-size: 1rem;
+    line-height: 1.6;
+    color: #555;
+    padding-top: 10px;
+}
+
+
+/* Show Alert */
+
+
+.badge-success {
+    background-color: #28a745; /* Màu nền xanh lá cây */
+    color: #000; /* Màu chữ đen */
+    font-weight: bold; /* Chữ đậm */
+  }
+  .badge-danger {
+    background-color: #dc3545; /* Màu nền đỏ */
+    color: #000; /* Màu chữ đen */
+    font-weight: bold; /* Chữ đậm */
+  }
+  
+  [alert-add-cart-success]{
+    position: fixed;
+    top: 70px;
+    right: 15px;
+    z-index:9999;
+  }
+  
+  [alert-add-cart-success].alert-hidden{
+    animation-name: alert-hidden;
+    animation-duration: 0.5s ;
+    animation-fill-mode: both;
+  }
+  
+  @keyframes alert-hidden{
+    from{
+        right: 15px;
+    }
+    to{
+        right: -100%;
+        display: none;
+    }
+  }
+  
+  [alert-add-cart-success] [close-alert]{
+    background: #ffffffff;
+    display: inline-block;
+    width: 24px;
+    height: 24px;
+    line-height: 24px;
+    text-align: center;
+    font-weight: 600;
+    border-radius: 50%;
+    cursor: pointer;
+  
+  }
+/* End show alert */
