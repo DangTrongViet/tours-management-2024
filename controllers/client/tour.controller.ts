@@ -53,12 +53,14 @@ export const detail = async (req: Request, res: Response) => {
         },
         raw: true
     });
+    console.log(tourDetail);
 
     if (tourDetail["images"]) {
         tourDetail["images"] = JSON.parse(tourDetail["images"]);
     }
 
-    tourDetail["price_special"] = tourDetail["price"] * ((1 - tourDetail["discount"]) / 100);
+    tourDetail["price_special"] = tourDetail["price"] * (1 - (tourDetail["discount"] / 100));
+
 
 
     res.render("client/pages/tours/detail", {

@@ -2,47 +2,31 @@ extends ../../layouts/default.pug
 include ../../mixins/box-head.pug
 
 block main 
+    div(
+        class="alert alert-success alert-hidden"
+        alert-delete-cart-success 
+    ) Đã xóa sản phẩm khỏi giỏ hàng! <span close-alert>x</span>
+
     .container.my-3
         .row 
             .col-12 
                 +box-head(pageTitle)
-        .row 
-            .col-12 
-                table(class="table table-bordered")
-                    thead 
-                        tr 
-                            th STT 
-                            th Ảnh
-                            th Tiêu đề
-                            th Giá
-                            th Số lượng
-                            th Tổng tiền
-                            th Hành động
+            .row 
+                .col-12 
+                    table(class="table table-bordered")
+                        thead 
+                            tr 
+                                th STT 
+                                th Ảnh
+                                th Tiêu đề
+                                th Giá
+                                th Số lượng
+                                th Tổng tiền
+                                th Hành động
 
-                    tbody
-                        tr
-                            td
-                            td
-                                img(src="")
-                            td
-                                a(href=`tours/detail/`)
-                            td
-                            td
-                                input(
-                                    type="number"
-                                    name="quantity"
-                                    value=""
-                                    min="1"
-                                    item-id=""
-                                    stype="width: 60px" 
-                                )
-                            td
-                            td
-                                button(
-                                    btn-delete =``
-                                    class="btn btn-sm btn-danger"
-                                ) Xoá
-                h5(class="text-right mb-4") Tổng đơn hàng: <span total-price>0</span>
+                        tbody
+                 
+                    h5(class="text-right mb-4") Tổng đơn hàng: <span total-price>0</span>đ
         .row
             .col-12
                 +box-head("Thông tin khách hàng")

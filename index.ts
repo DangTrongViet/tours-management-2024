@@ -3,6 +3,7 @@ import sequelize from "./config/database";
 import dotenv from 'dotenv';
 import moment from "moment";
 import clientRoutes from "./routes/client/index.route";
+import cors from "cors";
 
 dotenv.config();
 
@@ -11,6 +12,8 @@ sequelize;
 const app: Express = express();
 const port: number | string = process.env.PORT || 3000 ;
 
+app.use(cors());
+app.use(express.json());
 app.use(express.static("public"));
 
 app.set("views", "./views");
