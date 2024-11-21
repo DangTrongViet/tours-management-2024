@@ -37,7 +37,6 @@ const alertAddCartSuccess = () => {
 // Hiển thị thông báo xóa sản phẩm khỏi giỏ hàng
 const alertDeleteCartSuccess = () => {
     const elementAlert = document.querySelector("[alert-delete-cart-success]");
-    console.log(elementAlert);
     if (elementAlert) {
         elementAlert.classList.remove("alert-hidden");
 
@@ -56,7 +55,7 @@ const alertDeleteCartSuccess = () => {
 // Nếu chưa có cart thì khởi tạo
 const cart = JSON.parse(localStorage.getItem("cart"));
 if (!cart) {
-    cart = [];
+    const cart = [];
     localStorage.setItem("cart", JSON.stringify(cart));
 }
 
@@ -85,23 +84,21 @@ if (formAddToCart) {
         if (quantity > 0 && !isNaN(tourId)) {
             const cart = JSON.parse(localStorage.getItem("cart"));
 
-            // Kiểm tra xem sản phẩm đã có trong giỏ hàng chưa
             const indexExistCart = cart.findIndex(item => item.tourId == tourId);
             if (indexExistCart === -1) {
-                // Thêm mới nếu chưa có
+
                 cart.push({
                     tourId: tourId,
                     quantity: quantity
                 });
             } else {
-                // Cập nhật số lượng nếu đã có
+
                 cart[indexExistCart].quantity += quantity;
             }
 
-            // Lưu giỏ hàng vào localStorage
             localStorage.setItem("cart", JSON.stringify(cart));
 
-            // Hiển thị thông báo và cập nhật giỏ hàng
+
             alertAddCartSuccess();
             showMiniCart();
         } else {
@@ -128,11 +125,13 @@ const cartDetail = () => {
             .then(data => {
                 let cartItemsHtml = '';
                 let totalPrice = 0;
-                const cartItems = data.data;
+                const cartItems = data.data.cart;
+
 
                 cartItems.forEach((item, index) => {
                     const priceNew = (item.price * (1 - (item.discount) / 100))
                     const rowTotal = priceNew * item.quantity;
+       
                     totalPrice += rowTotal;
                     const image = JSON.parse(item.images);
                     const imageUrl = image[0];
@@ -167,6 +166,7 @@ const cartDetail = () => {
                     `;
 
                 });
+    
                 document.querySelector("tbody").innerHTML = cartItemsHtml;
                 document.querySelector("[total-price]").textContent = totalPrice.toLocaleString();
                 updateCart();
@@ -198,22 +198,24 @@ function deleteItem(itemId) {
 
 // Update Cart
 
-function updateCart(){
+function updateCart() {
     const inputQuantity = document.querySelectorAll('input[name="quantity"]')
     if (inputQuantity.length > 0) {
         inputQuantity.forEach((input) => {
             input.addEventListener("change", (e) => {
-                
-                const quantity = parseInt(e.target.value);
-                const itemId = e.target.getAttribute("item-id");
+                if (e.target.name === 'quantity') {
+                    const quantity = parseInt(e.target.value);
+                    const itemId = e.target.getAttribute("item-id");
 
-                const indexExistCart = cart.findIndex(item => item.tourId == itemId);
-                if (indexExistCart !== -1) {
+                    const indexExistCart = cart.findIndex(item => item.tourId == itemId);
+                    if (indexExistCart !== -1) {
 
-                    cart[indexExistCart].quantity = quantity;
+                        cart[indexExistCart].quantity = quantity;
 
-                    localStorage.setItem("cart", JSON.stringify(cart));
-                    cartDetail();
+                        localStorage.setItem("cart", JSON.stringify(cart));
+                        cartDetail();
+                    }
+
                 }
             });
         })
@@ -222,3 +224,43 @@ function updateCart(){
 
 // End Update Cart
 
+// Lấy thông tin khách hàng từ form
+const formOrder = document.querySelector("[form-order]");
+if (formOrder) {
+    formOrder.addEventListener("submit", (e) => {
+        e.preventDefault();
+
+        const fullName = formOrder.querySelector("[name='fullName']").value;
+        const email = formOrder.querySelector("[name='email']").value;
+        const phone = formOrder.querySelector("[name='phone']").value;
+        const note = formOrder.querySelector("[name='note']").value;
+
+        const cart = JSON.parse(localStorage.getItem("cart"));
+
+        fetch("/cart", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                cart,
+                customer: {
+                    fullName: fullName,
+                    email: email,
+                    phone: phone,
+                    note: note
+                }
+            })
+        })
+            .then(response => response.json())
+            .then(data => {
+                localStorage.setItem("cart", JSON.stringify([]));
+                console.log("Response from server:", data.data.customer);
+            })
+            .catch(error => {
+                console.error("Lỗi khi gửi dữ liệu giỏ hàng và thông tin khách hàng:", error);
+            });
+        
+    });
+    cartDetail();
+}

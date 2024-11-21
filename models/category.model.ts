@@ -30,7 +30,7 @@ const Category = sequelize.define("category", {
     },
     deleted: {
         type: DataTypes.BOOLEAN,
-        defaultValue: false // Đặt giá trị mặc định là false
+        defaultValue: false 
     },
     deletedAt: {
         type: DataTypes.DATE
