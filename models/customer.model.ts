@@ -9,20 +9,27 @@ const Customer = sequelize.define("customer", {
         primaryKey: true
     },
     fullName: {
-        type: DataTypes.STRING(255),
-        allowNull: false, 
-    },
-    phone: {
-        type: DataTypes.STRING(20),
+        type: DataTypes.STRING(50),
         allowNull: false, 
     },
     email: {
         type: DataTypes.STRING(255),
         allowNull: false, 
-        unique: true, 
     },
-    note: {
-        type: DataTypes.STRING(255), 
+    phone: {
+        type: DataTypes.STRING(10),
+        allowNull: false
+    },
+    password: {
+        type: DataTypes.TEXT('long'),
+        allowNull: false
+    },
+    token: {
+        type: DataTypes.STRING(21),
+        allowNull: false,
+    },
+    avatar: {
+        type: DataTypes.STRING(500)
     },
     status: {
         type: DataTypes.STRING(50),

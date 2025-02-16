@@ -1,39 +1,35 @@
 import { DataTypes } from "sequelize";
 import sequelize from "../config/database"; 
 
-const Booking = sequelize.define("booking", {
+const Order = sequelize.define("order", {
     id: {
         type: DataTypes.INTEGER,
         autoIncrement: true, 
         allowNull: false,
         primaryKey: true
     },
-    customerId: {
-        type: DataTypes.INTEGER,
+    code: {
+        type: DataTypes.STRING(10),
         allowNull: false,
     },
-    tourId: {
-        type: DataTypes.INTEGER,
-        allowNull: false, 
-    },
-    quantity: {
-        type: DataTypes.INTEGER,
-        allowNull: false, 
-    },
-    total_price: {
-        type: DataTypes.DECIMAL(10, 2),
-        allowNull: false,
-    },
-    booking_date: {
-        type: DataTypes.DATE,
-        defaultValue: DataTypes.NOW, 
-    },
-    status: {
+    fullName: {
         type: DataTypes.STRING(50),
-        defaultValue: 'pending', 
+        allowNull: false, 
+    },
+    email: {
+        type: DataTypes.STRING(255),
+        allowNull: false, 
+    },
+    phone: {
+        type: DataTypes.STRING(10),
+        allowNull: false, 
     },
     note: {
-        type: DataTypes.TEXT, 
+        type: DataTypes.STRING(500), 
+    },
+    status: {
+        type: DataTypes.STRING(20),
+        defaultValue: 'pending', 
     },
     deleted: {
         type: DataTypes.BOOLEAN,
@@ -52,8 +48,8 @@ const Booking = sequelize.define("booking", {
 
     },
 }, {
-    tableName: 'bookings',
+    tableName: 'orders',
     timestamps: true, 
 });
 
-export default Booking;
+export default Order;

@@ -1,0 +1,20 @@
+extends ../../layouts/default.pug
+include ../../mixins/box-head.pug
+
+block main
+        .container.my-3 
+            .row 
+                .col-12 
+                    if(user)
+                        +box-head("Thông tin tài khoản")
+                        if(user.fullName)
+                            p Họ tên: <b> #{user.fullName} </b>
+                        if(user.email)
+                            p Email: <b> #{user.email} </b>
+            
+                        a(
+                            href=`/user/info/edit`
+                            class="btn btn-primary"
+                        ) Chỉnh sửa thông tin
+
+        

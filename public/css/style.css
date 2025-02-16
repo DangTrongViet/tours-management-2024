@@ -308,3 +308,53 @@ form[form-add-to-cart] {
   }
   
 /* End show alert */
+
+
+
+.badge-success {
+    background-color: #28a745; /* Màu nền xanh lá cây */
+    color: #000; /* Màu chữ đen */
+    font-weight: bold; /* Chữ đậm */
+  }
+  .badge-danger {
+    background-color: #dc3545; /* Màu nền đỏ */
+    color: #000; /* Màu chữ đen */
+    font-weight: bold; /* Chữ đậm */
+  }
+  
+  [show-alert]{
+    position: fixed;
+    top: 70px;
+    right: 15px;
+    z-index:9999;
+  }
+  
+  [show-alert].alert-hidden{
+    animation-name: alert-hidden;
+    animation-duration: 0.5s ;
+    animation-fill-mode: both;
+  }
+  
+  @keyframes alert-hidden{
+    from{
+        right: 15px;
+    }
+    to{
+        right: -100%;
+        display: none;
+    }
+  }
+  
+  [show-alert] [close-alert]{
+    background: #ffffffff;
+    display: inline-block;
+    width: 24px;
+    height: 24px;
+    line-height: 24px;
+    text-align: center;
+    font-weight: 600;
+    border-radius: 50%;
+    cursor: pointer;
+  
+  }
+  /* End show alert */

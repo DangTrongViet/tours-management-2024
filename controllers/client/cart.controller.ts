@@ -1,8 +1,8 @@
 import { Request, Response } from "express";
 import Tour from "../../models/tour.model";
-import Customer from "../../models/customer.model";
-import Booking from "../../models/bookings.model";
-
+import Order from "../../models/orders.model";
+import orderItem from "../../models/orders_item.model";
+import { generateRandomNumber } from "../../helpers/generate";
 
 
 export const index = async (req: Request, res: Response) => {
@@ -16,9 +16,12 @@ export const index = async (req: Request, res: Response) => {
 
 export const checkout = async (req: Request, res: Response) => {
     let cart = [];
+    const detailCart = [];
+    let order = {};
+
     const data = {
         cart: {},
-        customer: {},
+        order: {},
 
     }
 
@@ -26,77 +29,76 @@ export const checkout = async (req: Request, res: Response) => {
         cart = req.body.cart;
     }
 
+    const code = 'ORD' + generateRandomNumber(3);
+    data.order["code"] = code;
     if (req.body.customer) {
-        const { fullName, phone, email, note } = req.body.customer;
+        const { fullName, email, phone, note } = req.body.customer;
 
+        if (fullName) {
+            data.order["fullName"] = fullName;
+        }
+        if (email) {
+            data.order["email"] = email;
+        }
+        if (phone) {
+            data.order["phone"] = phone;
+        }
+        if (note) {
+            data.order["note"] = note;
+        }
 
-        const existCustomer = await Customer.findOne({
-            raw: true,
-            attributes: ['id', 'fullName', 'email', 'phone', 'note'],
-            where: {
-                email: email,
-                deleted: false,
-                status: 'active'
-            }
+        order = await Order.create({
+            code: data.order["code"],
+            fullName: data.order["fullName"],
+            email: data.order["email"],
+            phone: data.order["phone"],
+            note: data.order["note"]
+
         });
-
-
-
-        if (!existCustomer) {
-            const newCustomer = await Customer.create({
-                fullName,
-                phone,
-                email,
-                note
-
-            });
-            const customer = await Customer.findOne({
-                raw: true,
-                attributes: ['id', 'fullName', 'email', 'phone', 'note'],
-                where: {
-                    email: newCustomer["email"],
-                    status: "active",
-                    deleted: false
-                }
-            })
-            data.customer = customer;
-        }
-        else {
-            data.customer = existCustomer;
-        }
 
     }
 
-    let tourDetail = [];
 
     for (const item of cart) {
         const tourId = item.tourId;
+        const quantity = item.quantity;
+    
 
         const tour = await Tour.findOne({
             raw: true,
+            attributes: ['id', 'title', 'images', 'price', 'discount', 'slug'],
             where: {
                 id: tourId,
                 deleted: false,
                 status: "active"
             }
         });
-        let total_price = item.quantity * (tour["price"] * (1 - tour["discount"] / 100));
-        tour["quantity"] = item.quantity;
-        if (data.customer["id"]) {
-            await Booking.create({
-                customerId: data.customer["id"],
+
+        tour["quantity"] = quantity;
+
+        detailCart.push(tour);
+
+
+
+
+        if(order["id"]){
+            await orderItem.create({
+                orderId: order["id"],
                 tourId: tourId,
-                quantity: item.quantity,
-                total_price: total_price,
-                note: data.customer["note"]
-
-            })
+                quantity: quantity,
+                price: tour["price"],
+                discount: tour["discount"]
+            });
+            data.order["orderId"] = order["id"];
+    
         }
-        tourDetail.push(tour);
+
+
     }
-    data.cart = tourDetail;
 
 
+    data.cart["detailCart"] = detailCart;
+    
 
     res.json({
         code: 200,
