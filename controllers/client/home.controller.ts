@@ -5,7 +5,7 @@ import { QueryTypes } from "sequelize";
 
 import Category from "../../models/category.model";
 
-
+import toursCategories from "../../models/tours_categories.model";
 
 export const index = async (req: Request, res: Response) => {
     
