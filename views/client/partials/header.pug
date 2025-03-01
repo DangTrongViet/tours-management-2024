@@ -1,3 +1,4 @@
+include ../mixins/search.pug
 header.header 
         .container
                 .row-align-items-center
@@ -5,7 +6,8 @@ header.header
                         .inner-logo
                             a(href="/")
                                 img(src="/images/th12_ODYP.jpg", alt="Logo" )
-                    
+                    .col-5 
+                        +search()
                     .col-9
                         .inner-menu
                             ul 

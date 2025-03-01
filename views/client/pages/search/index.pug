@@ -1,0 +1,14 @@
+extends ../../layouts/default
+include ../../mixins/tour-layout.pug
+//- nhúng
+include ../../mixins/box-head.pug
+//- Không ghi gì mặc định là thẻ div VD: .row, .product-image
+block main 
+    .container.my-3 
+        .row 
+            .col-12 
+                +box-head(pageTitle)
+        if(tours.length>0)
+            +tour-grid(tours)
+        else 
+            h3(class="text-center") Không tìm thấy chuyến đi nào

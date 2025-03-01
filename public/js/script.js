@@ -488,3 +488,17 @@ if (formResetPasword) {
 }
 // End Nhập Otp 
 
+// Search
+const formSearch = document.querySelector("[form-search]");
+if (formSearch) {
+    formSearch.addEventListener("submit", (e) => {
+        e.preventDefault();
+
+        const keyword = document.querySelector("input[name='keyword']").value;
+
+        window.location.href = `/search?keyword=${encodeURIComponent(keyword)}`;
+    });
+}
+
+// End Search
+

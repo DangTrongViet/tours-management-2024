@@ -1,0 +1,6 @@
+include tour-item.pug
+mixin tour-grid(tours)
+    .row 
+        each item in tours
+            +tour-item(item)
+            
