@@ -146,41 +146,43 @@ const cartDetail = () => {
                 if (cartItems.length > 0) {
                     cartItems.forEach((item, index) => {
                         const priceNew = (item.price * (1 - (item.discount) / 100))
-                        const rowTotal = priceNew * item.quantity;
+                        if(item.quantity <= item.stock){
+                            const rowTotal = priceNew * item.quantity;
 
-                        totalPrice += rowTotal;
-                        const image = JSON.parse(item.images);
-                        const imageUrl = image[0];
-
-
-                        cartItemsHtml += `
-                            <tr>
-                                <td>
-                                    ${index + 1}
-                                </td>
-                                <td>
-                                    <img src="${imageUrl}" alt="${item.title}" style="width: 50px; height: 50px;">
-                                </td>
-                                <td>
-                                    <a href="/tours/detail/${item.slug}">${item.title}
-                                    </a>
-                                </td>
-                                <td>
-                                    ${priceNew.toLocaleString()}đ
-                                </td>
-                                <td>
-                                    <input type="number" name="quantity" value="${item.quantity}" min="1" max="${item.stock}" item-id="${item.id}" style="width: 60px;">
-                                </td>
-                                <td>
-                                    ${rowTotal.toLocaleString()}đ
-                                </td>
-                                <td>
-                                    <button class="btn btn-sm btn-danger" onclick="deleteItem(${item.id})">Xoá</button>
-                                </td>
+                            totalPrice += rowTotal;
+                            const image = JSON.parse(item.images);
+                            const imageUrl = image[0];
     
-                            </tr>
-                        `;
-
+                        
+                            cartItemsHtml += `
+                                <tr>
+                                    <td>
+                                        ${index + 1}
+                                    </td>
+                                    <td>
+                                        <img src="${imageUrl}" alt="${item.title}" style="width: 50px; height: 50px;">
+                                    </td>
+                                    <td>
+                                        <a href="/tours/detail/${item.slug}">${item.title}
+                                        </a>
+                                    </td>
+                                    <td>
+                                        ${priceNew.toLocaleString()}đ
+                                    </td>
+                                    <td>
+                                        <input type="number" name="quantity" value="${item.quantity}" min="1" max="${item.stock}" item-id="${item.id}" style="width: 60px;">
+                                    </td>
+                                    <td>
+                                        ${rowTotal.toLocaleString()}đ
+                                    </td>
+                                    <td>
+                                        <button class="btn btn-sm btn-danger" onclick="deleteItem(${item.id})">Xoá</button>
+                                    </td>
+        
+                                </tr>
+                            `;
+                        }
+                        
                     });
 
                     document.querySelector("tbody").innerHTML = cartItemsHtml;
@@ -215,6 +217,7 @@ function deleteItem(itemId) {
 function updateCart() {
     const inputQuantity = document.querySelectorAll('input[name="quantity"]')
     if (inputQuantity.length > 0) {
+        let max = parseInt(inputQuantity.value);
         inputQuantity.forEach((input) => {
             input.addEventListener("change", (e) => {
                 if (e.target.name === 'quantity') {
@@ -222,11 +225,10 @@ function updateCart() {
                     const itemId = e.target.getAttribute("item-id");
 
                     const indexExistCart = cart.findIndex(item => item.tourId == itemId);
-                    console.log(indexExistCart);
                     if (indexExistCart !== -1) {
 
                         cart[indexExistCart].quantity = quantity;
-                        console.log("hi")
+
                         localStorage.setItem("cart", JSON.stringify(cart));
                         cartDetail();
                     }

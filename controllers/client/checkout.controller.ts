@@ -2,9 +2,6 @@ import { Request, Response } from "express";
 import Order from "../../models/orders.model";
 import orderItem from "../../models/orders_item.model";
 import Tour from "../../models/tour.model";
-import { or } from "sequelize";
-import { userRoute } from "../../routes/client/user.route";
-
 
 export const success = async (req: Request, res: Response) => {
 

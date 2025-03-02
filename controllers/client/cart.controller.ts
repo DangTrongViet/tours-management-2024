@@ -66,7 +66,7 @@ export const checkout = async (req: Request, res: Response) => {
 
         const tour = await Tour.findOne({
             raw: true,
-            attributes: ['id', 'title', 'images', 'price', 'discount', 'slug'],
+            attributes: ['id', 'title', 'images', 'price', 'discount', 'slug', "stock"],
             where: {
                 id: tourId,
                 deleted: false,
