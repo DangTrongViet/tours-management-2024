@@ -13,9 +13,11 @@ block main
                 +box-head(pageTitle)
             .row 
                 .col-12 
-                    table(class="table table-bordered")
+                    table(class="table table-bordered" checkbox-multi)
                         thead 
-                            tr 
+                            tr
+                                th
+                                    input(type="checkbox" name="checkall") 
                                 th STT 
                                 th Ảnh
                                 th Tiêu đề

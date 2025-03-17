@@ -105,7 +105,8 @@ if (formAddToCart) {
 
                 cart.push({
                     tourId: tourId,
-                    quantity: quantity
+                    quantity: quantity,
+                    checked: false
                 });
             } else {
 
@@ -127,6 +128,7 @@ if (formAddToCart) {
 
 // Lấy ra thông tin cart
 const cartDetail = () => {
+    showMiniCart();
     if (cart.length > 0) {
 
         fetch("/cart", {
@@ -146,16 +148,18 @@ const cartDetail = () => {
                 if (cartItems.length > 0) {
                     cartItems.forEach((item, index) => {
                         const priceNew = (item.price * (1 - (item.discount) / 100))
-                        if(item.quantity <= item.stock){
+                        if (item.quantity <= item.stock) {
                             const rowTotal = priceNew * item.quantity;
 
-                            totalPrice += rowTotal;
                             const image = JSON.parse(item.images);
                             const imageUrl = image[0];
-    
-                        
+
+
                             cartItemsHtml += `
                                 <tr>
+                                    <td>
+                                        <input type="checkbox" name="id" value =${item.id}>
+                                    </td>
                                     <td>
                                         ${index + 1}
                                     </td>
@@ -173,7 +177,7 @@ const cartDetail = () => {
                                         <input type="number" name="quantity" value="${item.quantity}" min="1" max="${item.stock}" item-id="${item.id}" style="width: 60px;">
                                     </td>
                                     <td>
-                                        ${rowTotal.toLocaleString()}đ
+                                         ${rowTotal.toLocaleString()}đ
                                     </td>
                                     <td>
                                         <button class="btn btn-sm btn-danger" onclick="deleteItem(${item.id})">Xoá</button>
@@ -182,12 +186,78 @@ const cartDetail = () => {
                                 </tr>
                             `;
                         }
-                        
+
                     });
 
                     document.querySelector("tbody").innerHTML = cartItemsHtml;
-                    document.querySelector("[total-price]").textContent = totalPrice.toLocaleString();
                     updateCart();
+                    // Checkbox Multi
+                    const checkboxMulti = document.querySelector("[checkbox-multi]");
+                    if (checkboxMulti) {
+                        const inputCheckAll = checkboxMulti.querySelector("input[name='checkall']");
+                        const inputsId = checkboxMulti.querySelectorAll("input[name='id']");
+                        inputCheckAll.addEventListener("click", () => {
+                            totalPrice = 0;
+
+                            inputsId.forEach(item => {
+                                item.checked = inputCheckAll.checked;
+
+                                if (item.checked) {
+
+                                    const itemData = cartItems.find(i => i.id == parseInt(item.value));
+                                    const priceNew = (itemData.price * (1 - (itemData.discount) / 100));
+                                    const rowTotal = priceNew * itemData.quantity;
+                                    totalPrice += rowTotal;
+                                    c = cart.map(i => {
+                                        i.checked = true; // thêm key checked vào mỗi item
+                                        return i;
+                                    });
+
+                                }
+                                else {
+
+                                    c = cart.map(i => {
+                                        i.checked = false; // thêm key checked vào mỗi item
+                                        return i;
+                                    });
+                                }
+                                localStorage.setItem('cart', JSON.stringify(c));
+
+                            });
+                            document.querySelector("[total-price]").textContent = totalPrice.toLocaleString();
+                        });
+
+                        inputsId.forEach(input => {
+                            input.addEventListener("click", () => {
+                                totalPrice = 0; // Reset tổng tiền khi thay đổi lựa chọn checkbox
+                                inputsId.forEach(cb => {
+                                    if (cb.checked) {
+                                        const itemData = cartItems.find(i => i.id == parseInt(cb.value));
+                                        const indexItem = cart.findIndex(i => i.tourId == parseInt(cb.value));
+                                        cart[indexItem].checked = true;
+                                        localStorage.setItem("cart", JSON.stringify(cart));
+
+
+                                        const priceNew = (itemData.price * (1 - (itemData.discount) / 100));
+                                        const rowTotal = priceNew * itemData.quantity;
+                                        totalPrice += rowTotal;
+                                    }
+                                    else {
+                                        const indexItem = cart.findIndex(i => i.tourId == parseInt(cb.value));
+                                        cart[indexItem].checked = false;
+                                        localStorage.setItem("cart", JSON.stringify(cart));
+                                    }
+                                });
+                                // Cập nhật tổng tiền
+                                document.querySelector("[total-price]").textContent = totalPrice.toLocaleString();
+                                // Cập nhật trạng thái "Chọn tất cả" nếu tất cả các checkbox được chọn
+                                const countChecked = checkboxMulti.querySelectorAll("input[name='id']:checked").length;
+                                inputCheckAll.checked = countChecked === inputsId.length;
+
+                            });
+                        });
+                    }
+                    // End Checkbox Multi
                 }
 
             })
@@ -199,6 +269,7 @@ const cartDetail = () => {
 
 cartDetail();
 // End Lấy ra thông tin cart
+
 
 // Delete Item in Cart
 function deleteItem(itemId) {
@@ -217,13 +288,12 @@ function deleteItem(itemId) {
 function updateCart() {
     const inputQuantity = document.querySelectorAll('input[name="quantity"]')
     if (inputQuantity.length > 0) {
-        let max = parseInt(inputQuantity.value);
+
         inputQuantity.forEach((input) => {
             input.addEventListener("change", (e) => {
                 if (e.target.name === 'quantity') {
                     const quantity = parseInt(e.target.value);
                     const itemId = e.target.getAttribute("item-id");
-
                     const indexExistCart = cart.findIndex(item => item.tourId == itemId);
                     if (indexExistCart !== -1) {
 
@@ -239,6 +309,20 @@ function updateCart() {
     }
 }
 // End Update Cart
+
+// Pagination
+const buttonPagination = document.querySelectorAll("[button-pagination]");
+buttonPagination.forEach(item => {
+    item.addEventListener("click", () => {
+        const page = item.getAttribute("button-pagination");
+        if (page) {
+            const paginationUrl = new URL(window.location.href);
+            paginationUrl.searchParams.set("page", page);
+            location.href = paginationUrl.href;
+        }
+    });
+});
+// End Pagination
 
 // Lấy thông tin khách hàng đặt hàng
 const formOrder = document.querySelector("[form-order]");
@@ -269,7 +353,8 @@ if (formOrder) {
         })
             .then(response => response.json())
             .then(data => {
-                localStorage.setItem("cart", JSON.stringify([]));
+                c = cart.filter(item => item.checked !== true);
+                localStorage.setItem('cart', JSON.stringify(c));
                 const orderId = data.data.order["orderId"]
                 location.href = `/checkout/success/${orderId}`;
                 console.log("Response from server:", data.data.customer);

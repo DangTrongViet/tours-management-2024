@@ -62,7 +62,7 @@ export const checkout = async (req: Request, res: Response) => {
     for (const item of cart) {
         const tourId = item.tourId;
         const quantity = item.quantity;
-    
+
 
         const tour = await Tour.findOne({
             raw: true,
@@ -76,12 +76,12 @@ export const checkout = async (req: Request, res: Response) => {
 
         tour["quantity"] = quantity;
 
+
         detailCart.push(tour);
 
 
+        if (order["id"] && item["checked"] === true) {
 
-
-        if(order["id"]){
             await orderItem.create({
                 orderId: order["id"],
                 tourId: tourId,
@@ -90,15 +90,16 @@ export const checkout = async (req: Request, res: Response) => {
                 discount: tour["discount"]
             });
             data.order["orderId"] = order["id"];
-    
+
         }
+
 
 
     }
 
 
     data.cart["detailCart"] = detailCart;
-    
+
 
     res.json({
         code: 200,

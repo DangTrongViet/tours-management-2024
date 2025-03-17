@@ -12,7 +12,7 @@ const Category = sequelize.define("category", {
         type: DataTypes.STRING(255),
         allowNull: false
     },
-    images: {
+    image: {
         type: DataTypes.STRING(500)
     },
     description: {

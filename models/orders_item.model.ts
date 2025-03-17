@@ -27,7 +27,9 @@ const orderItem = sequelize.define("orderItem", {
         type: DataTypes.INTEGER
     },
     timeStart: {
-        type: DataTypes.DATE
+        type: DataTypes.DATE,
+        allowNull: false,
+        defaultValue: DataTypes.NOW
     }
 }, {
     tableName: 'orders_item',
