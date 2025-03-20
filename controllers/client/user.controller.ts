@@ -4,7 +4,8 @@ import ForgotPassword from "../../models/forgot_password.model";
 import md5 from "md5";
 import { generateRandomNumber, generateRandomString } from "../../helpers/generate";
 import sendMailHelper from "../../helpers/sendEmail";
-import { Op } from "sequelize";
+import sequelize from "../../config/database";
+import { Op, QueryTypes } from "sequelize";
 // [GET] /user/register
 export const index = async (req: Request, res: Response) => {
 
@@ -360,6 +361,58 @@ export const resetPasswordPost = async (req: Request, res: Response) => {
 
 };
 
+// [GET] /user/tourBookingHistory
+export const tourBookingHistory = async (req: Request, res: Response) => {
+    const token = req.cookies.tokenUser;
+    let totalPrice: number = 0;
+
+    // Tìm khách hàng với token
+    const user = await Customer.findOne({
+        raw: true,
+        attributes: ['email'],
+        where: {
+            token: token,
+            deleted: false,
+            status: "active"
+        }
+    });
+
+    const orderItems = await sequelize.query(`
+        SELECT tours.images, tours.title, orders_item.timeStart, orders_item.quantity, 
+               ROUND(tours.price * (1 - tours.discount / 100), 0) AS price_special
+        FROM tours
+        JOIN orders_item ON tours.id = orders_item.tourId
+        JOIN orders ON orders.id = orders_item.orderId
+        WHERE orders.email = :email
+            AND orders.deleted = false
+            AND tours.deleted = false
+            AND tours.status = 'active'
+    `, {
+        replacements: { email: user["email"] },
+        type: QueryTypes.SELECT
+    });
+    orderItems.forEach(item => {
+        if (item["images"]) {
+            const images = JSON.parse(item["images"]);
+            item["image"] = images[0];
+        }
+        item["timeStart"] = new Date(item["timeStart"]);
+        const day = String(item["timeStart"].getDate()).padStart(2, '0');   
+        const month = String(item["timeStart"].getMonth() + 1).padStart(2, '0'); // Lấy tháng, nhớ cộng thêm 1 vì getMonth() trả về tháng từ 0-11
+        const year = String(item["timeStart"].getFullYear());
+
+        item["timeStart"] = `${day}/${month}/${year}`;
+        item["price_special"] = parseFloat(item["price_special"]);
+        totalPrice += item["price_special"] * item["quantity"];
+    });
+
+
+    res.render("client/pages/user/tourBookingHistory", {
+        pageTitle: "Lịch sử đơn đặt hàng",
+        orderItems: orderItems,
+        totalPrice: totalPrice.toLocaleString()
+    });
+};
 
 
 

@@ -34,5 +34,7 @@ router.post("/password/reset",validateUser.resetPasswordPost,controller.resetPas
 
 router.get("/info",authMiddleware.requireAuth,controller.info);
 
+router.get("/tourBookingHistory",controller.tourBookingHistory);
+
 
 export const userRoute: Router = router;

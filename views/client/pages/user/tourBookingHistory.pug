@@ -1,0 +1,36 @@
+extends ../../layouts/default
+include ../../mixins/box-head.pug
+
+block main 
+    .container.my-3 
+        .row 
+            .col-12 
+                h4(class="mb-2") Thông tin lịch sử đặt hàng
+                table(class="table table-bordered")
+                    thead
+                        tr
+                            th STT
+                            th Ngày đặt
+                            th Ảnh
+                            th Tên
+                            th Giá
+                            th Số lượng
+                            th Tổng tiền
+                    tbody
+                        if(orderItems.length>0)
+                            each item,index in orderItems 
+                                tr 
+                                    td #{index+1}
+                                    td #{item.timeStart}
+                                    td 
+                                        img(
+                                            src=item.image
+                                            alt=item.title
+                                            width="80px"
+                                        )
+                                    td #{item.title}
+                                    td #{item.price_special.toLocaleString()}đ
+                                    td #{item.quantity}
+                                    td #{(item.price_special) * (item.quantity).toLocaleString()}đ
+            if(orderItems.length>0)
+                h3(class="text-end") Tổng đơn hàng: #{totalPrice.toLocaleString()}đ   

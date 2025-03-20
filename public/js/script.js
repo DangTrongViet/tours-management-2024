@@ -189,7 +189,7 @@ const cartDetail = () => {
 
                     });
 
-                    document.querySelector("tbody").innerHTML = cartItemsHtml;
+                    document.querySelector("#cartItems").innerHTML = cartItemsHtml;
                     updateCart();
                     // Checkbox Multi
                     const checkboxMulti = document.querySelector("[checkbox-multi]");

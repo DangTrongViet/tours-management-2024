@@ -1,0 +1,35 @@
+.sider
+    button#toggleSiderBtn.btn.btn-outline-light
+        i.fas.fa-bars
+    .inner-menu 
+        ul.nav.flex-column
+            li.nav-item
+                a.nav-link.active(href=`${prefixAdmin}/dashboard`) 
+                    i.fas.fa-tachometer-alt.me-2 Tổng quan
+            if(role.permission.includes("products-view"))
+                li.nav-item
+                    a.nav-link(href=`${prefixAdmin}/products`) 
+                        i.fas.fa-box.me-2 Danh sách sản phẩm
+            if(role.permission.includes("products-category-view"))
+                li.nav-item    
+                    a.nav-link(href=`${prefixAdmin}/products-category`) 
+                        i.fas.fa-list.me-2 Danh mục sản phẩm
+            if(role.permission.includes("roles-view"))
+                li.nav-item
+                    a.nav-link(href=`${prefixAdmin}/roles`) 
+                        i.fas.fa-users-cog.me-2 Nhóm quyền
+            if(role.permission.includes("roles-permissions"))
+                li.nav-item
+                    a.nav-link(href=`${prefixAdmin}/roles/permissions`) 
+                        i.fas.fa-users-cog.me-2 Phân quyền
+            if(role.permission.includes("accounts-view"))
+                li.nav-item
+                    a.nav-link(href=`${prefixAdmin}/accounts`) 
+                        i.fas.fa-trash.me-2 Danh sách tài khoản
+            if(role.permission.includes("trash-view"))
+                li.nav-item
+                    a.nav-link(href=`${prefixAdmin}/products/recycleBin`) 
+                        i.fas.fa-trash.me-2 Thư mục rác
+            li.nav-item
+                    a.nav-link(href=`${prefixAdmin}/settings/general`) Cài đặt chung
+    script(src="/admin/js/script.js")

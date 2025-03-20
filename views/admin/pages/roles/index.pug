@@ -1,0 +1,65 @@
+extends ../../layouts/default
+include ../../mixins/pagination.pug
+include ../../mixins/search.pug
+include ../../mixins/filterStatus.pug
+include ../../mixins/form-change-multi.pug
+include ../../mixins/alert.pug
+include ../../mixins/sort.pug
+
+block main
+    .main-content
+        +alert-success(5000)
+        h1 Nhóm quyền
+        .card.mb-3
+            .card-header Danh sách Nhóm quyền
+            .card-body
+                .card.mb-3
+                    .card-header Bộ lọc và Tìm kiếm
+                    .card-body
+                        .row
+                            .col-8
+                                // Bộ lọc và tìm kiếm có thể nằm ở đây
+                            .col-4.text-right
+                                a(
+                                    href=`${prefixAdmin}/roles/create`
+                                    class="btn btn-outline-success"
+                                ) 
+                                    i.fas.fa-plus-circle.me-1
+                                    | Thêm mới
+                table(class="table table-hover table-sm")
+                    thead
+                        tr
+                            th STT
+                            th Nhóm quyền
+                            th Mô tả ngắn
+                            th(class="text-center") Hành động
+                    tbody
+                        if(records.length > 0)
+                            each item, index in records
+                                tr
+                                    td #{index + 1}
+                                    td #{item.title}
+                                    td #{item.description}
+                                    td.text-center
+                                        a(
+                                            href=`${prefixAdmin}/roles/detail/${item.id}`
+                                            class="btn btn-secondary btn-sm"
+                                        ) 
+                                            i.fas.fa-info-circle.me-1
+                                            | Chi tiết
+                                        a(
+                                            href=`${prefixAdmin}/roles/edit/${item.id}`
+                                            class="btn btn-warning btn-sm"
+                                        ) 
+                                            i.fas.fa-edit.me-1
+                                            | Sửa
+                                        button(
+                                            class="btn btn-danger btn-sm ml-1"
+                                            data-id=item.id
+                                            button-delete
+                                        ) 
+                                            i.fas.fa-trash.me-1
+                                            | Xóa 
+                        else
+                            tr
+                                td(colspan="4" class="text-center") Chưa có nhóm quyền nào được tạo

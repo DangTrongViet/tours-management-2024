@@ -8,13 +8,13 @@ header.header
                                 img(src="/images/th12_ODYP.jpg", alt="Logo" )
                     .col-5 
                         +search()
-                    .col-9
+                    .col-12
                         .inner-menu
                             ul 
                                 li                          
                                     a(href="/") Trang chủ
                                 li                          
-                                    a(href="/newletter") Bảng tin
+                                    a(href="/newletter") Tin tức
 
                                 li 
                                     a(href="/categories") Danh mục
@@ -24,6 +24,8 @@ header.header
                                 if(user)
                                     li  
                                         a(href="/user/info") #{user.fullName}
+                                    li  
+                                        a(href="/user/tourBookingHistory") Lịch sử đặt tour                                       
                                     li  
                                         a(href="/user/logout") Đăng xuất
                                 else
