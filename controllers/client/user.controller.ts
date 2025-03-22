@@ -377,8 +377,9 @@ export const tourBookingHistory = async (req: Request, res: Response) => {
         }
     });
 
+
     const orderItems = await sequelize.query(`
-        SELECT tours.images, tours.title, orders_item.timeStart, orders_item.quantity, 
+        SELECT tours.images, orders_item.id, tours.title, tours.slug, orders_item.timeStart, orders_item.quantity, orders.status, 
                ROUND(tours.price * (1 - tours.discount / 100), 0) AS price_special
         FROM tours
         JOIN orders_item ON tours.id = orders_item.tourId
@@ -391,13 +392,14 @@ export const tourBookingHistory = async (req: Request, res: Response) => {
         replacements: { email: user["email"] },
         type: QueryTypes.SELECT
     });
+   
     orderItems.forEach(item => {
         if (item["images"]) {
             const images = JSON.parse(item["images"]);
             item["image"] = images[0];
         }
         item["timeStart"] = new Date(item["timeStart"]);
-        const day = String(item["timeStart"].getDate()).padStart(2, '0');   
+        const day = String(item["timeStart"].getDate()).padStart(2, '0');
         const month = String(item["timeStart"].getMonth() + 1).padStart(2, '0'); // Lấy tháng, nhớ cộng thêm 1 vì getMonth() trả về tháng từ 0-11
         const year = String(item["timeStart"].getFullYear());
 
@@ -414,5 +416,100 @@ export const tourBookingHistory = async (req: Request, res: Response) => {
     });
 };
 
+// [POST] /user/tourBookingHistory/cancelTourcancelTour
+export const cancelTour = async (req: Request, res: Response) => {
+    res.render("client/pages/user/tourBookingHistory", {
+        pageTitle: "Hủy Tour",
+        messages: {
+            error: req.flash("error"),
+            success: req.flash("success")
+        }
+    });
+};
 
+// [POST] /user/tourBookingHistory/cancelTourcancelTour
+export const cancelTourPost = async (req: Request, res: Response) => {
+    const token = req.cookies.tokenUser;
+    const orderItemId = req.body.orderItemId;
 
+    // Tìm khách hàng
+    const user = await Customer.findOne({
+        raw: true,
+        attributes: ['email'],
+        where: {
+            token,
+            deleted: false,
+            status: "active"
+        }
+    });
+
+    // Lấy orderId từ orderItemId
+    interface OrderItemResult {
+        orderId: number;
+    }
+    
+    const result = await sequelize.query<OrderItemResult>(`
+        SELECT oi.orderId
+        FROM orders_item AS oi
+        WHERE oi.id = :orderItemId
+        LIMIT 1
+    `, {
+        replacements: { orderItemId },
+        type: QueryTypes.SELECT
+    });
+    
+    const orderId = result[0]?.orderId;
+
+    // Xóa item trong orders_item
+    await sequelize.query(`
+        DELETE oi
+        FROM orders_item AS oi
+        JOIN tours ON tours.id = oi.tourId
+        JOIN orders ON orders.id = oi.orderId
+        WHERE orders.email = :email
+            AND oi.id = :itemId
+            AND orders.deleted = false
+            AND tours.deleted = false
+            AND tours.status = 'active'
+    `, {
+        replacements: {
+            email: user["email"],
+            itemId: orderItemId
+        },
+        type: QueryTypes.DELETE
+    });
+
+    // Kiểm tra còn item nào trong đơn hàng không
+    const countResult = await sequelize.query<{ count: number }>(`
+        SELECT COUNT(*) AS count
+        FROM orders_item
+        WHERE orderId = :orderId
+    `, {
+        replacements: { orderId },
+        type: QueryTypes.SELECT
+    });
+
+    const countItems = countResult[0]?.count || 0;
+
+    if (countItems === 0) {
+        await sequelize.query(`
+            DELETE FROM orders
+            WHERE id = :orderId
+              AND email = :email
+              AND deleted = false
+        `, {
+            replacements: {
+                orderId,
+                email: user["email"]
+            },
+            type: QueryTypes.DELETE
+        });
+    }
+
+    req.flash("success", "Hủy đơn hàng thành công!");
+
+    res.json({
+        code: 200,
+        message: `Hủy Tour Thành Công!`
+    });
+};

@@ -3,6 +3,7 @@ import Tour from "../../models/tour.model";
 import Order from "../../models/orders.model";
 import orderItem from "../../models/orders_item.model";
 import { generateRandomNumber } from "../../helpers/generate";
+import { or } from "sequelize";
 
 
 export const index = async (req: Request, res: Response) => {

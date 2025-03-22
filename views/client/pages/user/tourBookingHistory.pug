@@ -1,7 +1,8 @@
 extends ../../layouts/default
 include ../../mixins/box-head.pug
-
+include ../../mixins/alert.pug
 block main 
+    +alert-success(5000)
     .container.my-3 
         .row 
             .col-12 
@@ -13,9 +14,11 @@ block main
                             th Ngày đặt
                             th Ảnh
                             th Tên
+                            th Trạng thái
                             th Giá
                             th Số lượng
                             th Tổng tiền
+                            th Hành động
                     tbody
                         if(orderItems.length>0)
                             each item,index in orderItems 
@@ -28,9 +31,16 @@ block main
                                             alt=item.title
                                             width="80px"
                                         )
-                                    td #{item.title}
+                                    td
+                                        a(href=`/tours/detail/${item.slug}`) #{item.title}
+                                    td #{item.status}
                                     td #{item.price_special.toLocaleString()}đ
                                     td #{item.quantity}
-                                    td #{(item.price_special) * (item.quantity).toLocaleString()}đ
+                                    td #{((item.price_special) * (item.quantity)).toLocaleString()}đ
+                                    td
+                                        div(class="form-control border-0 bg-transparent p-0")
+                                            button.btn.btn-danger.cancel-tour-btn(onclick=`cancelItem(${item.id})`)
+                                                i.fas.fa-times-circle
+                                                | HỦY TOUR
             if(orderItems.length>0)
                 h3(class="text-end") Tổng đơn hàng: #{totalPrice.toLocaleString()}đ   

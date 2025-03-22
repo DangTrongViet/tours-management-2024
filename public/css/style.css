@@ -358,3 +358,23 @@ form[form-add-to-cart] {
   
   }
   /* End show alert */
+
+  /* Cancel tour */
+
+  .cancel-tour-btn {
+    width: 100%;
+    padding: 6px 12px;
+    font-weight: 500;
+    border-radius: 50px; /* giống rounded-pill */
+    transition: 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+.cancel-tour-btn:hover {
+    opacity: 0.85;
+}
+
+/* End Cancel tour */

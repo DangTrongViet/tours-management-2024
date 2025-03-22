@@ -52,6 +52,7 @@ const alertDeleteCartSuccess = () => {
     }
 }
 
+
 // Show Alert
 
 const showAlert = document.querySelector("[show-alert]");
@@ -309,6 +310,37 @@ function updateCart() {
     }
 }
 // End Update Cart
+
+// Cancel tour
+function cancelItem(orderItemId) {
+    const confirmDelete = confirm("Bạn có chắc chắn muốn hủy đơn hàng này không?");
+    if (!confirmDelete) return;
+    
+    fetch("/user/tourBookingHistory/cancelTour", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+            orderItemId: orderItemId
+        })
+    })
+        .then(response => response.json())
+        .then(data => {
+            console.log("Response from server:", data.token);
+            if (data.code == 200) {
+                
+                location.reload();
+            }
+        })
+        .catch(error => {
+            console.error("Lỗi khi gửi dữ liệu thông tin khách hàng:", error);
+        });
+
+}
+
+// End Cancel tour
+
 
 // Pagination
 const buttonPagination = document.querySelectorAll("[button-pagination]");

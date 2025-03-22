@@ -36,5 +36,9 @@ router.get("/info",authMiddleware.requireAuth,controller.info);
 
 router.get("/tourBookingHistory",controller.tourBookingHistory);
 
+router.get("/tourBookingHistory/cancelTour",controller.cancelTour);
+router.post("/tourBookingHistory/cancelTour",controller.cancelTourPost);
+
+
 
 export const userRoute: Router = router;
