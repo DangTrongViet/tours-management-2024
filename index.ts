@@ -7,6 +7,7 @@ import cors from "cors";
 import flash from "express-flash";
 import cookieParser from "cookie-parser";
 import session from "express-session";
+import adminRoutes from "./routes/admin/index.route";
 
 dotenv.config();
 
@@ -16,7 +17,7 @@ const app: Express = express();
 const port: number = parseInt(process.env.PORT as string, 10) || 3000;
 
 app.use(cors({
-    origin: '*',  // Cho phép tất cả các địa chỉ
+    origin: '192.168.55.5', 
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     credentials: true,
 }));
@@ -41,7 +42,7 @@ app.locals.moment = moment;
 
 // Client Routes
 clientRoutes(app);
-
+adminRoutes(app);
 app.listen(port, '0.0.0.0', () => {
     console.log(`App listening on port ${port}`);
 });
