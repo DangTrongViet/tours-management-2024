@@ -10,7 +10,7 @@ const adminRoutes = (app: Express): void => {
     app.use(`${systemConfig.prefixAdmin}/tours`, tourRoute );
     app.use(`${systemConfig.prefixAdmin}/vouchers`,voucherRoute )
     app.use(`${systemConfig.prefixAdmin}/customers`, accountRoute)
-    app.use(`${systemConfig.prefixAdmin}/category`, categoryRoute);
+    app.use(`${systemConfig.prefixAdmin}/categories`, categoryRoute);
 };
 
 export default adminRoutes;
