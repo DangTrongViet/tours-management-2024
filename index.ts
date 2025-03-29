@@ -8,7 +8,7 @@ import flash from "express-flash";
 import cookieParser from "cookie-parser";
 import session from "express-session";
 import adminRoutes from "./routes/admin/index.route";
-
+import * as systemConfig from "./config/system";
 dotenv.config();
 
 sequelize;
@@ -39,7 +39,7 @@ app.set("view engine", "pug");
 
 // App Local Varilables
 app.locals.moment = moment;
-
+app.locals.prefixAdmin=systemConfig.prefixAdmin;
 // Client Routes
 clientRoutes(app);
 adminRoutes(app);
