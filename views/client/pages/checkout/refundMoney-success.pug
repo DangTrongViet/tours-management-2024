@@ -1,0 +1,12 @@
+extends ../../layouts/default
+include ../../mixins/box-head.pug
+include ../../mixins/alert.pug
+
+block main
+    +alert-success(5000) 
+    .container.my-3
+        .row 
+            .col-12
+                h3 Cảm ơn bạn đã hoàn tiền!
+                .refund-info-container
+                a.btn.btn-primary(href='/cart') Quay lại giỏ hàng

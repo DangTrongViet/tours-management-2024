@@ -1,0 +1,19 @@
+extends ../../layouts/default.pug
+include ../../mixins/box-head.pug
+
+block main
+        .container.my-3 
+            .row 
+                .col-12 
+                    +box-head(pageTitle)
+            .row 
+                each item in vouchers
+                    .col-6.mb-3 
+                        div(class="card")
+                            img(src='/images/logoFoot.jpg' class="card-img-top", alt="Voucher Image")
+                            div(class="card-body")
+                                h5(class="card-title") Giảm tối đa #{parseFloat(item.discount)}%
+                                ul    
+                                    li Đơn tối thiểu : đ#{parseFloat(item.minAmount)}Tr
+                                    li Hết hạn sau : #{item.daysLeft} ngày
+                                button.btn.btn-primary(onclick=`useVoucher(${JSON.stringify(item)})`) Sử dụng

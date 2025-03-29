@@ -1,7 +1,9 @@
 extends ../../layouts/default.pug
 include ../../mixins/box-head.pug
-
+include ../../mixins/alert.pug
 block main 
+    +alert-error(5000)
+
     div(
         class="alert alert-success alert-hidden"
         alert-delete-cart-success 
@@ -73,4 +75,3 @@ block main
                         button(
                             class="btn btn-success btn-block"
                         ) ĐẶT TOUR
-

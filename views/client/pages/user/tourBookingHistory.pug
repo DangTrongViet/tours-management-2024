@@ -1,6 +1,7 @@
 extends ../../layouts/default
 include ../../mixins/box-head.pug
 include ../../mixins/alert.pug
+
 block main 
     +alert-success(5000)
     .container.my-3 
@@ -18,12 +19,14 @@ block main
                             th Giá
                             th Số lượng
                             th Tổng tiền
+                            th Ngày thanh toán  <!-- New column for payment date -->
+                            th Ngày hoàn tiền <!-- New column for refund date -->
                             th Hành động
                     tbody
-                        if(orderItems.length>0)
-                            each item,index in orderItems 
+                        if(orderItems.length > 0)
+                            each item, index in orderItems 
                                 tr 
-                                    td #{index+1}
+                                    td #{index + 1}
                                     td #{item.timeStart}
                                     td 
                                         img(
@@ -37,10 +40,31 @@ block main
                                     td #{item.price_special.toLocaleString()}đ
                                     td #{item.quantity}
                                     td #{((item.price_special) * (item.quantity)).toLocaleString()}đ
+                                    td 
+                                        // Check if the status is 'paid' to show payment date
+                                        if (item.status === 'paid')
+                                            | #{item.paymentDate}
+                                        else 
+                                            | #{item.paymentDate} 
+
+                                    td 
+                                        // Check if the status is 'refund completed' to show refund date
+                                        if (item.status === 'refund completed')
+                                            | #{item.refund_date}  
+                                      
+
                                     td
                                         div(class="form-control border-0 bg-transparent p-0")
-                                            button.btn.btn-danger.cancel-tour-btn(onclick=`cancelItem(${item.id})`)
-                                                i.fas.fa-times-circle
-                                                | HỦY TOUR
-            if(orderItems.length>0)
-                h3(class="text-end") Tổng đơn hàng: #{totalPrice.toLocaleString()}đ   
+                                            // Only show cancel button if status is not 'paid' and not 'refund completed'
+                                            if (item.status !== 'paid' && item.status !== 'refund completed')
+                                                button.btn.btn-danger.cancel-tour-btn(onclick=`cancelItem(${item.id})`)
+                                                    i.fas.fa-times-circle
+                                                    | HỦY TOUR
+                                            // Check if order status is 'paid'
+                                            if (item.status === 'paid')
+                                                button.btn.btn-warning.refund-tour-btn(onclick=`refundItem(${item.id})`)
+                                                    i.fas.fa-undo
+                                                    | HOÀN TIỀN
+            if(orderItems.length > 0)
+                h3(class="text-end") Tổng đơn hàng: #{totalPrice.toLocaleString()}đ
+                h3(class="text-end") Tổng đơn hàng đã thanh toán: #{paidTotal.toLocaleString()}đ

@@ -378,3 +378,227 @@ form[form-add-to-cart] {
 }
 
 /* End Cancel tour */
+
+.icon-footer {
+    display: flex;
+    justify-content: left;
+    gap: 20px; /* Space between the icons */
+  }
+  
+  .icon {
+    font-size: 30px;  /* Size of the icons */
+    transition: color 0.3s ease;  /* Smooth color transition */
+  }
+  
+  /* Facebook Icon Color */
+  .icon-footer .bi-facebook {
+    color: #1877F2;  /* Facebook blue */
+  }
+  
+  /* Instagram Icon Color */
+  .icon-footer .bi-instagram {
+    color: #E4405F;  /* Instagram pinkish red */
+  }
+  
+  /* YouTube Icon Color */
+  .icon-footer .bi-youtube {
+    color: #FF0000;  /* YouTube red */
+  }
+  
+  /* Hover Effect */
+  .icon-footer .icon:hover {
+    opacity: 0.7;  /* Slight fade effect when hovering */
+  }
+  
+  .infor-footer {
+    display: flex;
+    justify-content: space-between;
+    padding: 20px;
+    background-color: #f1f1f1;
+    font-family: Arial, sans-serif;
+    color: #333;
+  }
+  
+  .category, .information {
+    width: 45%;
+  }
+  
+  .Tieude {
+    font-size: 18px;
+    font-weight: bold;
+    color: #2c3e50;
+    margin-bottom: 10px;
+  }
+  
+  .list-item {
+    list-style-type: none;
+    padding: 0;
+  }
+  
+  .list-item li {
+    margin: 5px 0;
+    font-size: 16px;
+    color: #7f8c8d;
+    cursor: pointer;
+  }
+  
+  .list-item li:hover {
+    color: #3498db;
+  }
+  
+  .information p {
+    margin: 5px 0;
+    font-size: 16px;
+    color: #7f8c8d;
+  }
+  
+  .information p:first-of-type {
+    font-weight: bold;
+    color: #2c3e50;
+  }
+  
+  .infor-footer .category, .infor-footer .information {
+    box-sizing: border-box;
+  }
+  
+  @media (max-width: 768px) {
+    .infor-footer {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+  
+    .category, .information {
+      width: 100%;
+      margin-bottom: 20px;
+    }
+  }
+  
+
+/* General card styling */
+.card {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  transition: box-shadow 0.3s ease-in-out;
+  padding: 10px; /* Reduced padding for smaller cards */
+  max-width: 280px; /* Set max-width for the card */
+  margin: auto; /* Center the cards */
+}
+
+.card:hover {
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.card-img-top {
+  width: 100%;
+  height: 150px; /* Reduced height for smaller images */
+  object-fit: cover; /* Ensures image covers space without distortion */
+  border-radius: 5px;
+}
+
+/* Card body text */
+.card-body {
+  padding: 10px; /* Reduced padding for the card body */
+}
+
+.card-title {
+  font-size: 16px; /* Smaller font size for the title */
+  font-weight: bold;
+  margin-bottom: 8px; /* Reduced margin for spacing */
+  color: #007bff;
+}
+
+/* List styling for voucher details */
+.card-body ul {
+  padding-left: 15px; /* Reduced padding */
+}
+
+.card-body li {
+  font-size: 12px; /* Smaller font size for list items */
+  color: #555;
+  margin-bottom: 4px; /* Reduced space between list items */
+}
+/* 
+/* Button styling */
+button.btn.btn-primary {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 8px 16px; /* Smaller padding for the button */
+  font-size: 12px; /* Smaller font size for the button */
+  border-radius: 5px;
+  cursor: pointer;
+  width: 100%; /* Full width button */
+}
+
+button.btn.btn-primary:hover {
+  background-color: #0056b3;
+}
+
+/* Responsive styling for smaller screens */
+@media (max-width: 768px) {
+  .col-6 {
+    width: 100%; /* Stack the cards vertically on small screens */
+  }
+}
+
+.container {
+  padding: 0 15px;
+}
+
+
+.button-group {
+  display: grid;
+  grid-template-columns: repeat(1,auto);
+  grid-template-rows: repeat(2,auto);
+  justify-content: end ;
+  flex-direction: column;
+  align-items: end;
+}
+.add-voucher-tour-btn{
+  grid-column: 2;
+  width: 100%;
+  padding: 6px 12px;
+  font-weight: 500;
+  border-radius: 50px; /* giống rounded-pill */
+  transition: 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.payment-tour-btn{
+  grid-column: 2;
+  width: 100%;
+  padding: 6px 12px;
+  font-weight: 500;
+  border-radius: 50px; /* giống rounded-pill */
+  transition: 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+} 
+#selectedVoucher {
+  background-color: #f8f9fa;  /* Màu nền nhẹ */
+  padding: 15px;               /* Khoảng cách bên trong */
+  border-radius: 8px;          /* Bo góc */
+  border: 1px solid #ddd;      /* Đường viền nhẹ */
+  width: 100%;                 /* Chiếm toàn bộ chiều rộng */
+  max-width: 350px;            /* Đảm bảo không quá rộng */
+  margin-top: 20px;            /* Khoảng cách trên */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Đổ bóng nhẹ */
+  font-size: 16px;             /* Kích thước chữ */
+  color: #007bff;              /* Màu chữ */
+}
+
+#selectedVoucherText {
+  font-weight: bold;           /* Làm đậm chữ */
+  color: #28a745;              /* Màu xanh lá cho phần thông báo "Voucher đã chọn" */
+}
+
+#selectedVoucherText::before {
+  content: '🎫 ';              /* Thêm biểu tượng vé vào đầu nội dung */
+}
+

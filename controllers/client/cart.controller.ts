@@ -3,13 +3,15 @@ import Tour from "../../models/tour.model";
 import Order from "../../models/orders.model";
 import orderItem from "../../models/orders_item.model";
 import { generateRandomNumber } from "../../helpers/generate";
-import { or } from "sequelize";
-
+import Customer from "../../models/customer.model";
 
 export const index = async (req: Request, res: Response) => {
 
     res.render("client/pages/cart/index", {
         pageTitle: "Giỏ hàng",
+        messages: {
+            error: req.flash("error"),
+        }
 
     });
 }
@@ -35,14 +37,32 @@ export const checkout = async (req: Request, res: Response) => {
     if (req.body.customer) {
         const { fullName, email, phone, note } = req.body.customer;
 
+        if(email){
+            const existCustomer = await Customer.findOne({
+                raw: true,
+                where: {
+                    email: email,
+                    status: "active",
+                    deleted: false
+                }
+            });
+            if(existCustomer){
+                data.order["email"] = email;
+            }
+            else{
+                return req.flash("error","Không tồn tại tài khoản với email này!");
+            }
+        }
+
         if (fullName) {
             data.order["fullName"] = fullName;
         }
-        if (email) {
-            data.order["email"] = email;
-        }
-        if (phone) {
+
+        if (phone && phone.length == 10) {
             data.order["phone"] = phone;
+        }
+        if(phone && phone.length > 10 || phone < 10){
+            return req.flash("error","Số điện thoại không hợp lệ!");
         }
         if (note) {
             data.order["note"] = note;
@@ -75,6 +95,7 @@ export const checkout = async (req: Request, res: Response) => {
             }
         });
 
+
         tour["quantity"] = quantity;
 
 
@@ -91,6 +112,12 @@ export const checkout = async (req: Request, res: Response) => {
                 discount: tour["discount"]
             });
             data.order["orderId"] = order["id"];
+
+            await Tour.update(
+                { stock: tour["stock"] - quantity},
+                {where: {id : tour["id"] }}
+            
+            )
 
         }
 

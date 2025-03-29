@@ -10,11 +10,11 @@ const orderItem = sequelize.define("orderItem", {
     },
     orderId: {
         type: DataTypes.INTEGER,
-        allowNull: false,    
+        allowNull: false,
     },
     tourId: {
         type: DataTypes.INTEGER,
-        allowNull: false,   
+        allowNull: false,
     },
     quantity: {
         type: DataTypes.INTEGER,
@@ -30,7 +30,15 @@ const orderItem = sequelize.define("orderItem", {
         type: DataTypes.DATE,
         allowNull: false,
         defaultValue: DataTypes.NOW
-    }
+    },
+    paymentDate: {  
+        type: DataTypes.DATE,
+        allowNull: true  
+    },
+    refund_date: {  
+        type: DataTypes.DATE,
+        allowNull: true,  
+    },
 }, {
     tableName: 'orders_item',
     timestamps: false // Tự động quản lý createAt, updateAt

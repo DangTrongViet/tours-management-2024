@@ -13,9 +13,14 @@ dotenv.config();
 sequelize;
 
 const app: Express = express();
-const port: number | string = process.env.PORT || 3000;
+const port: number = parseInt(process.env.PORT as string, 10) || 3000;
 
-app.use(cors());
+app.use(cors({
+    origin: '*',  // Cho phép tất cả các địa chỉ
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    credentials: true,
+}));
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static("public"));
@@ -28,8 +33,6 @@ app.use(session(
 ));
 app.use(flash());
 
-
-
 app.set("views", "./views");
 app.set("view engine", "pug");
 
@@ -39,6 +42,6 @@ app.locals.moment = moment;
 // Client Routes
 clientRoutes(app);
 
-app.listen(port, () => {
+app.listen(port, '0.0.0.0', () => {
     console.log(`App listening on port ${port}`);
 });

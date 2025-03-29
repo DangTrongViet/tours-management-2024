@@ -40,5 +40,12 @@ router.get("/tourBookingHistory/cancelTour",controller.cancelTour);
 router.post("/tourBookingHistory/cancelTour",controller.cancelTourPost);
 
 
+router.get('/voucher',controller.voucher);
+
+
+router.get('/payment',controller.payment);
+
+
+
 
 export const userRoute: Router = router;

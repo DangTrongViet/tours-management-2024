@@ -149,13 +149,11 @@ const cartDetail = () => {
                 if (cartItems.length > 0) {
                     cartItems.forEach((item, index) => {
                         const priceNew = (item.price * (1 - (item.discount) / 100))
-                        if (item.quantity <= item.stock) {
+                        if (item.quantity <= item.stock || item.quantity) {
                             const rowTotal = priceNew * item.quantity;
 
                             const image = JSON.parse(item.images);
                             const imageUrl = image[0];
-
-
                             cartItemsHtml += `
                                 <tr>
                                     <td>
@@ -188,9 +186,12 @@ const cartDetail = () => {
                             `;
                         }
 
+
+
                     });
 
                     document.querySelector("#cartItems").innerHTML = cartItemsHtml;
+
                     updateCart();
                     // Checkbox Multi
                     const checkboxMulti = document.querySelector("[checkbox-multi]");
@@ -265,6 +266,7 @@ const cartDetail = () => {
             .catch(error => {
                 console.error("Lỗi khi gửi dữ liệu giỏ hàng:", error);
             });
+
     }
 }
 
@@ -315,7 +317,7 @@ function updateCart() {
 function cancelItem(orderItemId) {
     const confirmDelete = confirm("Bạn có chắc chắn muốn hủy đơn hàng này không?");
     if (!confirmDelete) return;
-    
+
     fetch("/user/tourBookingHistory/cancelTour", {
         method: "POST",
         headers: {
@@ -329,7 +331,7 @@ function cancelItem(orderItemId) {
         .then(data => {
             console.log("Response from server:", data.token);
             if (data.code == 200) {
-                
+
                 location.reload();
             }
         })
@@ -340,6 +342,384 @@ function cancelItem(orderItemId) {
 }
 
 // End Cancel tour
+function displayVouchers(vouchers) {
+    const voucherListContainer = document.getElementById('voucherList');
+    voucherListContainer.innerHTML = '';
+
+    if (vouchers.length > 0) {
+        vouchers.forEach(voucher => {
+            const discount = parseFloat(voucher.discount);
+            const minAmount = parseFloat(voucher.minAmount);
+
+            const card = document.createElement('div');
+            card.classList.add('col-md-12', 'mb-3');
+
+            card.innerHTML = `
+                <div class="card">
+                    <img src="/images/logoFoot.jpg" class="card-img-top" alt="Voucher Image">
+                    <div class="card-body">
+                        <h5 class="card-title">Giảm tối đa ${discount}%</h5>
+                        <ul>
+                            <li>Đơn tối thiểu: đ${minAmount.toLocaleString()} Tr</li>
+                            <li>Hết hạn sau: ${voucher.daysLeft} ngày</li>
+                        </ul>
+                        <button class="btn btn-primary" onclick="addVoucher(${voucher.id}, ${discount}, ${minAmount})">Thêm</button>
+                    </div>
+                </div>
+            `;
+
+            voucherListContainer.appendChild(card);
+        });
+
+        voucherListContainer.style.display = 'block';
+    } else {
+        voucherListContainer.innerHTML = '<p>Không có voucher nào.</p>';
+        voucherListContainer.style.display = 'block';
+    }
+}
+
+let currentVoucher = null;  // Biến lưu voucher hiện tại (nếu có)
+
+// Hàm thêm voucher
+function addVoucher(voucherId, discount, minAmount) {
+    const voucher = JSON.parse(localStorage.getItem("voucher"));
+
+    if (voucher) {
+        voucherId = voucher.voucherId;
+        discount = parseFloat(voucher.discount);
+        minAmount = parseFloat(voucher.minAmount)
+    }
+    currentVoucher = { voucherId, discount, minAmount };  // Lưu voucher vào biến hiện tại
+
+    const selectedVoucherText = document.getElementById('selectedVoucherText');
+
+    selectedVoucherText.textContent = `Giảm tối đa ${discount}% (Đơn tối thiểu: đ${minAmount.toLocaleString()} Tr)`;
+
+    document.getElementById('voucherList').style.display = 'none';
+
+    const voucherWrapper = document.createElement('div');
+    voucherWrapper.classList.add(`voucher-${voucherId}`);
+    const selectedVoucherContainer = selectedVoucherText.parentNode;
+    voucherWrapper.appendChild(selectedVoucherText);
+    selectedVoucherContainer.appendChild(voucherWrapper);
+
+    // Tính lại tổng đơn hàng sau khi thêm voucher
+    recalculateTotalPrice();
+}
+
+// Hàm tính toán tổng đơn hàng
+function recalculateTotalPrice() {
+    const orderItems = JSON.parse(document.querySelector("[data-orderItems]").getAttribute("data-orderItems"));
+    let totalPrice = 0;
+
+    const checkboxMulti = document.querySelector("[checkbox-multi]");
+    const inputsId = checkboxMulti.querySelectorAll("input[name='id']");
+    const inputCheckAll = checkboxMulti.querySelector("input[name='checkall']");
+
+    // Tính tổng tiền các sản phẩm được chọn
+    inputsId.forEach(cb => {
+        if (cb.checked) {
+            for (let item of orderItems) {
+                if (item.id == cb.value) {
+                    const priceNew = item.price_special;
+                    const rowTotal = priceNew * item.quantity;
+                    totalPrice += rowTotal;
+                }
+            }
+        }
+    });
+
+    // Kiểm tra nếu tổng tiền đạt mức tối thiểu để áp dụng voucher (nếu có)
+    if (currentVoucher && totalPrice >= currentVoucher.minAmount * 1000000) {
+        totalPrice = totalPrice - (totalPrice * (currentVoucher.discount / 100));
+    }
+
+    const countChecked = checkboxMulti.querySelectorAll("input[name='id']:checked").length;
+    inputCheckAll.checked = countChecked === inputsId.length;
+
+    // Cập nhật tổng tiền vào UI
+    document.querySelector("#total-price").textContent = `Tổng đơn hàng: ${totalPrice.toLocaleString()}đ`;
+}
+
+// Xử lý sự kiện checkbox khi thay đổi
+if (window.location.href.includes('user/payment')) {
+    const orderItems = JSON.parse(document.querySelector("[data-orderItems]").getAttribute("data-orderItems"));
+
+    const checkboxMulti = document.querySelector("[checkbox-multi]");
+    if (checkboxMulti) {
+        const inputCheckAll = checkboxMulti.querySelector("input[name='checkall']");
+        const inputsId = checkboxMulti.querySelectorAll("input[name='id']");
+
+        // Sự kiện cho checkbox "Chọn tất cả"
+        inputCheckAll.addEventListener("click", () => {
+            let totalPrice = 0;
+
+            inputsId.forEach(cb => {
+                cb.checked = inputCheckAll.checked;
+
+                if (cb.checked) {
+                    for (let item of orderItems) {
+                        if (item.id == cb.value) {
+                            const priceNew = item.price_special;
+                            const rowTotal = priceNew * item.quantity;
+                            totalPrice += rowTotal;
+                        }
+                    }
+                }
+            });
+
+            // Tính lại tổng tiền sau khi thay đổi checkbox
+            recalculateTotalPrice();
+        });
+
+        // Sự kiện cho các checkbox từng món hàng
+        inputsId.forEach(input => {
+            input.addEventListener("click", () => {
+                // Tính lại tổng tiền khi thay đổi checkbox
+                recalculateTotalPrice();
+            });
+        });
+
+        // Cập nhật lại tổng tiền khi hủy bỏ chọn checkbox
+        inputsId.forEach(cb => {
+            cb.addEventListener("change", () => {
+                recalculateTotalPrice();
+            });
+        });
+    }
+}
+
+// Sự kiện khi người dùng thay đổi voucher (thay đổi voucher sau khi đã chọn)
+function changeVoucher(newVoucherId, newDiscount, newMinAmount) {
+    currentVoucher = { voucherId: newVoucherId, discount: newDiscount, minAmount: newMinAmount };  // Cập nhật voucher mới
+    addVoucher(newVoucherId, newDiscount, newMinAmount);  // Gọi lại hàm addVoucher để cập nhật tổng tiền
+}
+
+// Use voucher
+function useVoucher(voucher) {
+    const item = {
+        voucherId: voucher.id,
+        discount: voucher.discount,
+        minAmount: voucher.minAmount
+    };
+    localStorage.setItem("voucher", JSON.stringify(item));
+
+    window.location.href = '/user/payment';
+
+
+    addVoucher(voucher.id, voucher.discount, voucher.minAmount);
+
+}
+// End Use voucher
+document.addEventListener('DOMContentLoaded', () => {
+    if (window.location.pathname === '/user/payment') {
+        const voucher = JSON.parse(localStorage.getItem("voucher"));
+
+        if (voucher) {
+            // Gọi lại hàm addVoucher để hiển thị voucher trên trang thanh toán
+            addVoucher(voucher.voucherId, voucher.discount, voucher.minAmount);
+            localStorage.removeItem("voucher");
+
+        }
+    }
+});
+
+function userPayment() {
+    const selectedCheckboxes = document.querySelectorAll('input[name="id"]:checked');
+    const selectedValues = Array.from(selectedCheckboxes).map(checkbox => checkbox.value);
+    let voucherId = document.querySelector("#selectedVoucher").querySelector("div")
+    if (voucherId) {
+        voucherId = voucherId.getAttribute("class").match(/\d+/);
+    }
+
+    // Gửi yêu cầu POST đến backend
+    fetch('/checkout/paymentSuccess', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            orderItemsId: selectedValues,
+            voucherId: voucherId || ""
+        }),
+    })
+        .then(response => response.json())  // Nhận phản hồi từ backend
+        .then(data => {
+            const paymentData = {
+                orderItems: data.orders,  // Dữ liệu đơn hàng
+                voucher: data.voucher[0]     // Dữ liệu voucher
+            };
+
+            // Hiển thị giao diện với dữ liệu trả về
+            renderPaymentSummary(paymentData);
+        })
+        .catch((error) => {
+            console.error('Error:', error);
+        });
+}
+// Hàm để hiển thị giao diện với dữ liệu trả về
+// Function to render the payment summary page
+function renderPaymentSummary(paymentData) {
+    const container = document.querySelector('.container.my-3');  // Find the container
+
+    // Update page title and content
+    container.innerHTML = `
+        <div class="row">
+            <div class="col-12">
+                <h2>Cảm ơn bạn đã thanh toán!</h2>
+                <div class="payment-summary">
+                    <h3>Thông tin thanh toán</h3>
+                    ${generateOrderSummary(paymentData.orderItems, paymentData.voucher)}  <!-- Pass voucher here -->
+                    ${generateVoucherSummary(paymentData.voucher)}
+                    
+                    <!-- Refund Policy Message -->
+                    <div class="refund-policy">
+                        <h4>Chính sách hoàn tiền</h4>
+                        <p>Hủy trong vòng 3 ngày kể từ ngày thanh toán để được hoàn lại 70% số tiền. Sau 3 ngày, không hoàn tiền.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+// Function to generate the order summary table
+function generateOrderSummary(orderItems, voucher) {
+    if (!orderItems || orderItems.length === 0) {
+        return '<p>Không có thông tin đơn hàng.</p>';
+    }
+
+    // Calculate the total order price
+    let totalOrderPrice = orderItems.reduce((total, item) => {
+        const itemTotal = item.price_special * item.quantity;
+        return total + itemTotal;
+    }, 0);
+
+    // If there is a voucher, apply the discount
+    if (voucher && voucher.discount) {
+        totalOrderPrice = totalOrderPrice - (totalOrderPrice * (voucher.discount / 100));
+    }
+
+    const rows = orderItems.map((item, index) => `
+        <tr>
+            <td>${index + 1}</td>
+            <td>${item.date}</td>
+            <td><img src="${item.image}" alt="Image" width="80px"></td>
+            <td><a href="/tours/detail/${item.slug}">${item.title}</a></td>
+            <td>${item.price_special.toLocaleString()}đ</td>
+            <td>${item.quantity}</td>
+            <td>${(item.price_special * item.quantity).toLocaleString()}đ</td>
+        </tr>
+    `).join('');
+
+    return `
+        <div class="order-summary">
+            <h4>Đơn hàng</h4>
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>STT</th>
+                        <th>Ngày thanh toán</th>
+                        <th>Ảnh</th>
+                        <th>Tên</th>
+                        <th>Giá</th>
+                        <th>Số lượng</th>
+                        <th>Tổng tiền</th>
+                    </tr>
+                </thead>
+                <tbody id="paymentSuccess">
+                    ${rows}
+                </tbody>
+            </table>
+            <div class="total-order">
+                <h5>Tổng đơn hàng: ${totalOrderPrice.toLocaleString()}đ</h5>
+            </div>
+        </div>
+    `;
+}
+
+// Function to generate the voucher summary
+function generateVoucherSummary(voucher) {
+    if (!voucher) {
+        return '<p>Không có voucher áp dụng.</p>';
+    }
+
+    return `
+        <div class="voucher-summary">
+            <h4>Voucher đã áp dụng</h4>
+            <p>Giảm tối đa ${voucher.discount}% (Đơn tối thiểu: đ${voucher.minAmount.toLocaleString()} Tr)</p>
+        </div>
+    `;
+}
+function refundItem(itemId) {
+    fetch('/checkout/refundMoneySuccess', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            orderItemId: itemId
+        }),
+    })
+        .then(response => response.json())
+        .then(data => {
+
+            renderRefundSuccess(data);
+
+        })
+        .catch((error) => {
+            console.error('Error:', error);
+        });
+}
+
+function renderRefundSuccess(data) {
+    const container = document.querySelector('.container.my-3');  // The container where refund info will be displayed
+
+    if (container) {  // Check if the container exists
+        container.innerHTML = `
+            <div class="row">
+                <div class="col-12">
+                    <!-- Refund Success Alert -->
+                    <div class="alert alert-success">
+                        <h3>Hoàn tiền thành công!</h3>
+                        <p><strong>Tổng tiền hoàn lại (70%):</strong> ${data.totalPriceRefund}đ</p>
+                        <p><strong>Ngày hoàn tiền:</strong> ${data.refundMoneyDate}</p>
+                    </div>
+
+                    <!-- Refund Details Table -->
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>STT</th>
+                                <th>Ngày thanh toán</th>
+                                <th>Ảnh</th>
+                                <th>Tên</th>
+                                <th>Giá</th>
+                                <th>Số lượng</th>
+                                <th>Tổng tiền</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>1</td>
+                                <td>${data.refundMoneyDate}</td>
+                                <td><img src="${JSON.parse(data.tour.images)[0]}" alt="${data.tour.title}" width="80px"></td>
+                                <td>${data.tour.title}</td>
+                                <td>${data.tour.price_special.toLocaleString()}đ</td>
+                                <td>${data.tour.quantity}</td>
+                                <td>${(data.tour.price_special * data.tour.quantity).toLocaleString()}đ</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        `;
+    } else {
+        console.error("Refund info container not found on the page.");
+    }
+}
+
+
 
 
 // Pagination
@@ -620,4 +1000,3 @@ if (formSearch) {
 }
 
 // End Search
-

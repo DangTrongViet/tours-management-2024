@@ -1,0 +1,54 @@
+extends ../../layouts/default
+include ../../mixins/box-head.pug
+include ../../mixins/alert.pug
+
+block main
+  +alert-success(5000)
+  .container.my-3
+    .row 
+      .col-12 
+        +box-head(pageTitle)
+        table(class="table table-bordered" checkbox-multi)
+          thead
+            tr
+              th
+                input(type="checkbox" name="checkall") 
+              th STT
+              th Ảnh
+              th Tên
+              th Giá
+              th Số lượng
+              th Tổng tiền
+          tbody(id="payment")
+            if(orderItems.length > 0)
+              // Filter out items with status 'paid' or 'refund completed', only show 'pending' items
+              each item, index in orderItems
+                if (item.status === 'pending') 
+                  tr 
+                    td 
+                      input(type="checkbox" name="id" value= item.id)
+                    td #{index}
+                    td 
+                      img(src=item.image alt=item.title width="80px")
+                    td
+                      a(href=`/tours/detail/${item.slug}`) #{item.title}
+                    td #{item.price_special.toLocaleString()}đ
+                    td #{item.quantity}
+                    td #{((item.price_special) * (item.quantity)).toLocaleString()}đ
+        if(orderItems.length > 0)
+          h3(class="text-end" id="total-price" data-orderItems = orderItems) Tổng đơn hàng: đ
+          .button-group
+            div(class="form-control border-0 bg-transparent p-0")
+              button.btn.btn-success.add-voucher-tour-btn(onclick=`displayVouchers(${JSON.stringify(vouchers)});`)
+                i.bi.bi-ticket-perforated
+                | THÊM VOUCHER
+            div#voucherList.container(style="display:none")
+            div#selectedVoucher
+              | Voucher đã chọn: 
+              span#selectedVoucherText Chưa có voucher
+            div(class="form-control border-0 bg-transparent p-0")
+              // Only show payment button if the order status is 'pending'
+              if (orderItems.some(item => item.status === 'pending'))
+                button.btn.btn-success.payment-tour-btn(onclick=`userPayment()`)
+                  i.bi.bi-credit-card
+                  | THANH TOÁN

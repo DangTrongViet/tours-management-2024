@@ -1,0 +1,46 @@
+extends ../../layouts/default
+include ../../mixins/box-head.pug
+include ../../mixins/alert.pug
+
+block main
+  +alert-success(5000)
+  .container.my-3
+    .row
+      .col-12
+        +box-head(pageTitle)
+        h2 Cảm ơn bạn đã thanh toán!
+        .payment-summary
+          h3 Thông tin thanh toán
+          if(paymentData)
+            .order-summary
+              h4 Đơn hàng
+              table(class="table table-bordered")
+                thead
+                  tr
+                    th STT
+                    th Ngày thanh toán
+                    th Ảnh
+                    th Tên
+                    th Giá
+                    th Số lượng
+                    th Tổng tiền
+                tbody
+                  each item, index in paymentData.orderItems
+                    tr
+                      td #{index + 1}
+                      td #{item.date}
+                      img(src= item.image)
+                      td #{item.title}
+                      td #{item.price_special.toLocaleString()}đ
+                      td #{item.quantity}
+                      td #{(item.price_special * item.quantity).toLocaleString()}đ
+            .voucher-summary
+              h4 Voucher đã áp dụng
+              if(paymentData.voucher)
+                p
+                  | Giảm tối đa #{paymentData.voucher.discount}% 
+                  (Đơn tối thiểu: đ#{paymentData.voucher.minAmount.toLocaleString()} Tr)
+              else
+                p | Không có voucher áp dụng.
+          else
+            p | Không có thông tin thanh toán.

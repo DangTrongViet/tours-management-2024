@@ -6,6 +6,11 @@ import { generateRandomNumber, generateRandomString } from "../../helpers/genera
 import sendMailHelper from "../../helpers/sendEmail";
 import sequelize from "../../config/database";
 import { Op, QueryTypes } from "sequelize";
+import Voucher from "../../models/voucher.model";
+import Tour from "../../models/tour.model";
+import orderItem from "../../models/orders_item.model";
+import { raw } from "mysql2";
+import { months } from "moment";
 // [GET] /user/register
 export const index = async (req: Request, res: Response) => {
 
@@ -341,7 +346,7 @@ export const resetPasswordPost = async (req: Request, res: Response) => {
     const password = md5(req.body.password);
 
     const email = req.body.email;
-    console.log(email);
+
     await Customer.update(
         { password: password },
         {
@@ -364,8 +369,8 @@ export const resetPasswordPost = async (req: Request, res: Response) => {
 // [GET] /user/tourBookingHistory
 export const tourBookingHistory = async (req: Request, res: Response) => {
     const token = req.cookies.tokenUser;
+    let paidTotal: number = 0;
     let totalPrice: number = 0;
-
     // Tìm khách hàng với token
     const user = await Customer.findOne({
         raw: true,
@@ -379,7 +384,8 @@ export const tourBookingHistory = async (req: Request, res: Response) => {
 
 
     const orderItems = await sequelize.query(`
-        SELECT tours.images, orders_item.id, tours.title, tours.slug, orders_item.timeStart, orders_item.quantity, orders.status, 
+        SELECT tours.images, orders_item.id, tours.title, tours.slug, orders_item.timeStart, orders_item.quantity, orders.status,
+        orders.status,orders_item.paymentDate, orders_item.refund_date,
                ROUND(tours.price * (1 - tours.discount / 100), 0) AS price_special
         FROM tours
         JOIN orders_item ON tours.id = orders_item.tourId
@@ -388,35 +394,57 @@ export const tourBookingHistory = async (req: Request, res: Response) => {
             AND orders.deleted = false
             AND tours.deleted = false
             AND tours.status = 'active'
+        ORDER BY orders_item.timeStart DESC
     `, {
         replacements: { email: user["email"] },
         type: QueryTypes.SELECT
     });
-   
+
     orderItems.forEach(item => {
         if (item["images"]) {
             const images = JSON.parse(item["images"]);
             item["image"] = images[0];
         }
         item["timeStart"] = new Date(item["timeStart"]);
-        const day = String(item["timeStart"].getDate()).padStart(2, '0');
-        const month = String(item["timeStart"].getMonth() + 1).padStart(2, '0'); // Lấy tháng, nhớ cộng thêm 1 vì getMonth() trả về tháng từ 0-11
-        const year = String(item["timeStart"].getFullYear());
+        const dayStart = String(item["timeStart"].getDate()).padStart(2, '0');
+        const monthStart = String(item["timeStart"].getMonth() + 1).padStart(2, '0'); // Lấy tháng, nhớ cộng thêm 1 vì getMonth() trả về tháng từ 0-11
+        const yearStart = String(item["timeStart"].getFullYear());
 
-        item["timeStart"] = `${day}/${month}/${year}`;
+        item["timeStart"] = `${dayStart}/${monthStart}/${yearStart}`;
+        
+        item["paymentDate"] = new Date(item["paymentDate"]);
+        const dayPayment = String(item["paymentDate"].getDate()).padStart(2, '0');
+        const monthPayment = String(item["paymentDate"].getMonth() + 1).padStart(2, '0'); // Lấy tháng, nhớ cộng thêm 1 vì getMonth() trả về tháng từ 0-11
+        const yearPayment = String(item["paymentDate"].getFullYear());
+        item["paymentDate"] = `${dayPayment}/${monthPayment}/${yearPayment}`;
+        
+        item["refund_date"] = new Date(item["refund_date"]);
+        const dayRefund = String(item["refund_date"].getDate()).padStart(2, '0');
+        const monthRefund = String(item["refund_date"].getMonth() + 1).padStart(2, '0'); // Lấy tháng, nhớ cộng thêm 1 vì getMonth() trả về tháng từ 0-11
+        const yearRefund = String(item["refund_date"].getFullYear());
+        item["refund_date"] = `${dayRefund}/${monthRefund}/${yearRefund}`;
+
+    
+    
         item["price_special"] = parseFloat(item["price_special"]);
+    
+        if(item["status"] == "paid"){
+            paidTotal+= item["price_special"] * item["quantity"];
+        }
         totalPrice += item["price_special"] * item["quantity"];
+      
     });
 
 
     res.render("client/pages/user/tourBookingHistory", {
         pageTitle: "Lịch sử đơn đặt hàng",
         orderItems: orderItems,
-        totalPrice: totalPrice.toLocaleString()
+        totalPrice: totalPrice,
+        paidTotal: paidTotal
     });
 };
 
-// [POST] /user/tourBookingHistory/cancelTourcancelTour
+// [GET] /user/tourBookingHistory/cancelTourcancelTour
 export const cancelTour = async (req: Request, res: Response) => {
     res.render("client/pages/user/tourBookingHistory", {
         pageTitle: "Hủy Tour",
@@ -447,7 +475,30 @@ export const cancelTourPost = async (req: Request, res: Response) => {
     interface OrderItemResult {
         orderId: number;
     }
-    
+
+    const orderitem = await orderItem.findOne({
+        raw: true,
+        where: {
+            id: orderItemId
+        }
+
+    });
+
+    const tour = await Tour.findOne({
+        raw: true,
+        where: {
+            id: orderitem["tourId"]
+        }
+    });
+    const stock = tour["stock"] + orderitem["quantity"];
+
+    console.log(stock);
+    await Tour.update(
+        { stock: stock }, {
+        where: { id: tour["id"] }
+    });
+
+
     const result = await sequelize.query<OrderItemResult>(`
         SELECT oi.orderId
         FROM orders_item AS oi
@@ -457,7 +508,7 @@ export const cancelTourPost = async (req: Request, res: Response) => {
         replacements: { orderItemId },
         type: QueryTypes.SELECT
     });
-    
+
     const orderId = result[0]?.orderId;
 
     // Xóa item trong orders_item
@@ -513,3 +564,107 @@ export const cancelTourPost = async (req: Request, res: Response) => {
         message: `Hủy Tour Thành Công!`
     });
 };
+
+export const refundMoney = async (req: Request, res: Response) => {
+    
+    res.render("client/pages/user/tourBookingHistory", {
+        pageTitle: "Hủy Tour",
+        messages: {
+            error: req.flash("error"),
+            success: req.flash("success")
+        }
+    });
+};
+
+
+// [GET] /user/payment
+export const payment = async (req: Request, res: Response) => {
+    const token = req.cookies.tokenUser;
+    let totalPrice: number = 0;
+
+    // Tìm khách hàng với token
+    const user = await Customer.findOne({
+        raw: true,
+        attributes: ['email'],
+        where: { token, deleted: false, status: "active" }
+    });
+
+
+    // Lấy các mục đơn hàng
+    const orderItems = await sequelize.query(`
+            SELECT tours.images, orders_item.id, tours.title, tours.slug, orders_item.timeStart, orders_item.quantity, orders.status,
+                   ROUND(tours.price * (1 - tours.discount / 100), 0) AS price_special
+            FROM tours
+            JOIN orders_item ON tours.id = orders_item.tourId
+            JOIN orders ON orders.id = orders_item.orderId
+            WHERE orders.email = :email
+                AND orders.deleted = false
+                AND tours.deleted = false
+                AND tours.status = 'active'
+        `, {
+        replacements: { email: user["email"] },
+        type: QueryTypes.SELECT
+    });
+
+    orderItems.forEach(item => {
+        if (item["images"]) {
+            const images = JSON.parse(item["images"]);
+            item["image"] = images[0];
+        }
+        item["price_special"] = parseFloat(item["price_special"]);
+        totalPrice += item["price_special"] * item["quantity"];
+    });
+    // Lấy các voucher
+    const vouchers = await Voucher.findAll({
+        raw: true,
+        where: { deleted: false, status: "active" }
+    });
+
+    // Tính thời gian còn lại đối với từng voucher
+    vouchers.forEach(item => {
+        item["expire"] = new Date(item["expire"]);
+        const currentDate: Date = new Date();
+        const timeDiff = item["expire"].getTime() - currentDate.getTime();
+        item["daysLeft"] = Math.ceil(timeDiff / (1000 * 3600 * 24));
+    });
+
+
+    res.render("client/pages/user/payment", {
+        pageTitle: "Thanh toán đơn hàng",
+        orderItems: orderItems,
+        totalPrice: totalPrice,
+        vouchers: vouchers
+
+    });
+
+}
+
+// [GET] /user/voucher
+export const voucher = async (req: Request, res: Response) => {
+    const vouchers = await Voucher.findAll({
+        raw: true
+        , where: {
+            deleted: false,
+            status: "active"
+        }
+    });
+    vouchers.forEach(item => {
+
+        item["expire"] = new Date(item["expire"]);
+
+        const currentDate: Date = new Date();
+        const timeDiff = item["expire"].getTime() - currentDate.getTime();
+        const daysLeft = Math.ceil(timeDiff / (1000 * 3600 * 24));
+
+        item["daysLeft"] = daysLeft
+    });
+    res.render("client/pages/user/voucher", {
+        pageTitle: "Mã Giảm Giá",
+        messages: {
+            error: req.flash("error"),
+            success: req.flash("success")
+        },
+        vouchers: vouchers
+    });
+};
+

@@ -1,7 +1,7 @@
 import { DataTypes } from "sequelize";
 import sequelize from "../config/database"; 
 
-const Customer = sequelize.define("customer", {
+const Admin = sequelize.define("admin", {
     id: {
         type: DataTypes.INTEGER,
         autoIncrement: true, 
@@ -37,7 +37,7 @@ const Customer = sequelize.define("customer", {
     },
     role: {
         type: DataTypes.STRING,
-        defaultValue: 'customer',  
+        defaultValue: 'admin',  // Đặt giá trị mặc định là 'admin'
         allowNull: false,
       },
     deleted: {
@@ -54,11 +54,10 @@ const Customer = sequelize.define("customer", {
     updatedAt: {
         type: DataTypes.DATE,
         defaultValue: DataTypes.NOW,
-       
     },
 }, {
-    tableName: 'customers',
+    tableName: 'admins', // Đặt tên bảng là 'admins'
     timestamps: true, 
 });
 
-export default Customer;
+export default Admin;
