@@ -81,4 +81,59 @@ export const addVoucher = async (req: Request, res: Response): Promise<any> => {
         });
     }
 };
+
+export const updateVoucher = async (req: Request, res: Response): Promise<any> => {
+    const { id } = req.params; // Lấy id từ tham số URL
+    const {
+        discount,
+        minAmount,
+        expire,
+        status,
+        deleted,
+        deletedAt,
+        createdAt,
+        updatedAt,
+    } = req.body; // Lấy dữ liệu từ body của request
+
+    try {
+        // Kiểm tra xem voucher có tồn tại không
+        const voucher = await Voucher.findOne({
+            where: { id },
+        });
+
+        if (!voucher) {
+            return res.status(404).json({
+                code: 404,
+                message: "Voucher không tồn tại",
+            });
+        }
+
+        // Cập nhật các trường voucher
+        voucher["discount"] = discount || voucher["discount"];
+        voucher["minAmount"] = minAmount || voucher["minAmount"];
+        voucher["expire"] = dayjs(expire).toISOString() || voucher["expire"]; // Chuyển ngày tháng sang ISO string
+        voucher["status"] = status || voucher["status"];
+        voucher["deleted"] = deleted || voucher["deleted"];
+        voucher["deletedAt"] = deletedAt ? dayjs(deletedAt).toISOString() : null;
+        voucher["createdAt"] = createdAt ? dayjs(createdAt).toISOString() : voucher["createdAt"];
+        voucher["updatedAt"] = updatedAt ? dayjs(updatedAt).toISOString() : new Date().toISOString();
+
+        // Lưu thay đổi vào cơ sở dữ liệu
+        await voucher.save();
+
+        // Trả về thông tin voucher đã cập nhật
+        res.json({
+            code: 200,
+            message: "Cập nhật voucher thành công",
+            data: voucher,
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({
+            code: 500,
+            message: "Đã xảy ra lỗi khi cập nhật voucher",
+            error: error.message,
+        });
+    }
+};
 export default router;
