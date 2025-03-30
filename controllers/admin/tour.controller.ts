@@ -2,11 +2,12 @@ import express, { Request, Response } from "express";
 import { Op } from "sequelize"; // Import Sequelize operators
 import sequelize from "../../config/database"; // Import sequelize instance
 import { QueryTypes } from "sequelize"; // Import QueryTypes for raw queries
+import Tour from "../../models/tour.model";
 
 const router = express.Router();
 
 // [GET] tours
-export const index= async (req: Request, res: Response) => {
+export const index = async (req: Request, res: Response) => {
     try {
 
         const { search, sortType, city, priceMin, priceMax, rating } = req.query;
@@ -72,3 +73,122 @@ export const index= async (req: Request, res: Response) => {
         });
     }
 }
+
+// [PUT] Cập nhật tour theo slug
+export const updateTour = async (req: Request, res: Response): Promise<any> => {
+    const { slug } = req.params; // Lấy slug từ tham số URL
+    const {
+        title,
+        timeStart,
+        price,
+        stock,
+        discount,
+        information,
+        status,
+        images,
+    } = req.body; // Lấy dữ liệu từ body của request
+
+    try {
+        // Kiểm tra xem tour có tồn tại không
+        const tour = await Tour.findOne({
+            where: { slug }, // Tìm tour theo slug
+        });
+
+        if (!tour) {
+            res.status(404).json({
+                code: 404,
+                message: "Tour không tồn tại",
+            });
+            return;
+        }
+
+        // Cập nhật các trường tour
+        tour["title"] = title || tour["title"];
+        tour["timeStart"] = timeStart || tour["timeStart"];
+        tour["price"] = price || tour["price"];
+        tour["stock"] = stock || tour["stock"];
+        tour["discount"] = discount || tour["discount"];
+        tour["information"] = information || tour["information"];
+        tour["status"] = status || tour["status"];
+        tour["images"] = images || tour["images"];
+
+        // Lưu thay đổi vào cơ sở dữ liệu
+        await tour.save();
+
+        // Trả về thông tin tour đã cập nhật
+        res.json({
+            code: 200,
+            message: "Cập nhật tour thành công",
+            data: tour,
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({
+            code: 500,
+            message: "Đã xảy ra lỗi khi cập nhật tour",
+            error: error.message,
+        });
+    }
+};
+
+
+
+// [POST] Thêm mới tour
+export const addTour = async (req: Request, res: Response): Promise<void> => {
+    const {
+        title,
+        code,
+        images,
+        price,
+        discount,
+        information,
+        schedule,
+        timeStart,
+        stock,
+        status,
+        position,
+        slug,
+        deleted,
+        deletedAt,
+        createdAt,
+        updatedAt,
+        category_title,
+    } = req.body; // Lấy dữ liệu từ body của request
+
+    try {
+        // Tạo tour mới
+        const newTour = await Tour.create({
+            title,
+            code,
+            images,
+            price,
+            discount,
+            information,
+            schedule,
+            timeStart,
+            stock,
+            status,
+            position,
+            slug,
+            deleted,
+            deletedAt,
+            createdAt,
+            updatedAt,
+            category_title,
+        });
+
+        // Trả về thông tin tour đã thêm
+        res.status(201).json({
+            code: 201,
+            message: "Tạo mới tour thành công!",
+            data: newTour,
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({
+            code: 500,
+            message: "Đã xảy ra lỗi khi thêm tour",
+            error: error.message,
+        });
+    }
+};

@@ -8,5 +8,5 @@ router.get("/", controller.index);
 
 router.post("/", controller.addVoucher);
 
-router.put("/", controller.updateVoucher);
+router.put("/:id", controller.updateVoucher);
 export const voucherRoute: Router = router;

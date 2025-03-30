@@ -16,7 +16,7 @@ export const index = async (req: Request, res: Response) => {
       SELECT *
       FROM vouchers
         WHERE 
-        AND deleted = false
+            deleted = false
             
 
       `,

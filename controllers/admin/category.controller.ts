@@ -5,7 +5,7 @@ import { QueryTypes } from "sequelize"; // Import QueryTypes for raw queries
 
 const router = express.Router();
 
-// [GET] tours
+// [GET] categories
 export const index = async (req: Request, res: Response) => {
     try {
 
