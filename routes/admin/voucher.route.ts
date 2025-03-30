@@ -6,6 +6,6 @@ const router: Router = Router();
 
 router.get("/", controller.index);
 
-
+router.post("/", controller.addVoucher);
 
 export const voucherRoute: Router = router;

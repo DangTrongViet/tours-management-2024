@@ -20,6 +20,7 @@
   "dependencies": {
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
+    "dayjs": "^1.11.13",
     "dotenv": "^16.4.5",
     "express": "^4.21.1",
     "express-flash": "^0.0.2",
@@ -31,5 +32,4 @@
     "pug": "^3.0.3",
     "sequelize": "^6.37.5"
   }
-
 }
