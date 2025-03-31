@@ -22,7 +22,7 @@ export const getCategories = async (req: Request, res: Response): Promise<any> =
             { page: page }, 
             countProduct
         );
-        console.log( pagination);
+  
         // Truy vấn danh mục theo phân trang
         const categories = await Category.findAll({
             raw: true,

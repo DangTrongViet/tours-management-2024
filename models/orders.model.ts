@@ -11,6 +11,7 @@ const Order = sequelize.define("order", {
     code: {
         type: DataTypes.STRING(10),
         allowNull: false,
+        unique: true
     },
     fullName: {
         type: DataTypes.STRING(50),
@@ -45,11 +46,21 @@ const Order = sequelize.define("order", {
     updatedAt: {
         type: DataTypes.DATE,
         defaultValue: DataTypes.NOW,
-
     },
 }, {
     tableName: 'orders',
     timestamps: true, 
+    hooks: {
+        beforeCreate: (instance) => {
+            // Ensure that the instance id is set before creating the code
+            instance["code"] = `ORD00${instance["id"]}`;
+        },
+        beforeUpdate: (instance) => {
+            if (instance["id"]) {
+                instance["code"] = `ORD00${instance["id"]}`;
+            }
+        },
+    }
 });
 
 export default Order;
