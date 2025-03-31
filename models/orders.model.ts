@@ -11,7 +11,7 @@ const Order = sequelize.define("order", {
     code: {
         type: DataTypes.STRING(10),
         allowNull: false,
-        unique: true
+        unique: true // Ensure the code is unique
     },
     fullName: {
         type: DataTypes.STRING(50),
@@ -51,15 +51,12 @@ const Order = sequelize.define("order", {
     tableName: 'orders',
     timestamps: true, 
     hooks: {
-        beforeCreate: (instance) => {
-            // Ensure that the instance id is set before creating the code
-            instance["code"] = `ORD00${instance["id"]}`;
-        },
-        beforeUpdate: (instance) => {
-            if (instance["id"]) {
-                instance["code"] = `ORD00${instance["id"]}`;
-            }
-        },
+        // This hook is called after the order is created, and id is available at this point
+        afterCreate: async (order) => {
+            // Set the code after the order is created and id is assigned
+            const code = `ORD00${order["id"]}`; // Construct code based on id
+            await order.update({ code: code })
+        }
     }
 });
 

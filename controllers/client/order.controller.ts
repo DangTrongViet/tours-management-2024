@@ -6,63 +6,78 @@ import orderItem from "../../models/orders_item.model";
 import Tour from "../../models/tour.model";
 
 // [POST] orders
-
 export const order = async (req: Request, res: Response): Promise<any> => {
-    const {customerInfo, cart, status} = req.body;
-    try {
-        
-    // Kiểm tra tính hợp lệ của dữ liệu
-    if (!customerInfo.fullName || !customerInfo.phone || !customerInfo.phone) {
+    const { customerInfo, cart, status } = req.body;
+
+    // Validate customerInfo and cart
+    if (!customerInfo.fullName || !customerInfo.phone || !customerInfo.email) {
         return res.status(400).json({ message: "Vui lòng nhập đầy đủ thông tin!" });
     }
 
-    if(!cart){
+    if (!cart || cart.length === 0) {
         return res.status(400).json({ message: "Giỏ hàng trống không!" });
     }
 
-    const order = await Order.create({
-        email: customerInfo.email,
-        phone: customerInfo.phone,
-        fullName: customerInfo.fullName,
-        note: customerInfo.note || "",
-        status: status
-     })
+    const transaction = await sequelize.transaction(); // Start transaction
 
-     await order.update({ code: `ORD00${order["id"]}` });
+    try {
+        // Create the order
+        const order = await Order.create({
+            email: customerInfo.email,
+            phone: customerInfo.phone,
+            fullName: customerInfo.fullName,
+            note: customerInfo.note || "",
+            status: status
+        }, { transaction });
 
-    for(const item of cart){
-        const tour  = await Tour.findOne({
-            where: {
-                id: item["id"],
-                deleted: false,
-                status: "active"
-            },
-            raw: true
-        })
-        await orderItem.create({
-            orderId: order["id"],
-            tourId: tour["id"],
-            discount: tour["discount"],
-            price: tour["price"],
-            quantity: item["quantity"],
-            timeStart: Date.now(),
-
-        })
-    }
-            // Trả về kết quả dưới dạng JSON
-            res.json({
-                code: 200,
-                message: "Lưu đơn đặt thành công",
-                customerInfo: customerInfo ,
-                cart: cart
+        // Add items to the order
+        for (const item of cart) {
+            // Fetch tour details for each item
+            const tour = await Tour.findOne({
+                where: {
+                    id: item.id,
+                    deleted: false,
+                    status: "active"
+                },
+                raw: true,
+                transaction // Include the transaction here
             });
-    
+
+            if (!tour) {
+                // If tour not found or inactive, throw an error
+                throw new Error(`Tour with ID ${item.id} not found or is inactive`);
+            }
+
+            // Create orderItem entry for each cart item
+            await orderItem.create({
+                orderId: order["id"],
+                tourId: tour["id"],
+                discount: tour["discount"],
+                price: tour["price"],
+                quantity: item.quantity,
+                timeStart: Date.now(),
+            }, { transaction });
+        }
+
+        // Commit the transaction after all actions are completed
+        await transaction.commit();
+
+        // Return the response
+        res.json({
+            code: 200,
+            message: "Lưu đơn đặt thành công",
+            customerInfo: customerInfo,
+            cart: cart
+        });
+
     } catch (error) {
+        // Rollback the transaction if there's an error
+        await transaction.rollback();
         console.error(error);
         res.status(500).json({
             code: 500,
-            message: "Đã xảy ra lỗi khi lấy danh sách customers",
+            message: "Đã xảy ra lỗi khi thêm dữ liệu order",
             error: error.message,
         });
     }
-}
+};
