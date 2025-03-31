@@ -13,10 +13,10 @@ import Tour from "../../models/tour.model";
 // [POST] user/register
 
 export const register = async (req: Request, res: Response): Promise<any> => {
-    const userInfo = req.body; 
+    const userInfo = req.body;
     try {
 
-        if(!userInfo.email || !userInfo.phone || !userInfo.fullName){
+        if (!userInfo.email || !userInfo.phone || !userInfo.fullName) {
             return res.json({
                 code: 404,
                 message: "Yêu cầu nhập đầy đủ thông tin!"
@@ -31,7 +31,7 @@ export const register = async (req: Request, res: Response): Promise<any> => {
             raw: true
         });
 
-        if(existCustomer){
+        if (existCustomer) {
             return res.json({
                 code: 404,
                 message: "Email đã tồn tại!",
@@ -40,7 +40,7 @@ export const register = async (req: Request, res: Response): Promise<any> => {
 
         }
 
-        const tokenUser  = generateRandomString(10);
+        const tokenUser = generateRandomString(10);
         const customer = await Customer.create({
             fullName: userInfo.fullName,
             email: userInfo.email,
@@ -48,14 +48,14 @@ export const register = async (req: Request, res: Response): Promise<any> => {
             password: md5(userInfo.password),
             token: tokenUser
         })
-        
-      
+
+
         res.json({
             code: 200,
             message: "Tạo tài khỏan thành công!",
             data: {
                 email: userInfo.email,
-                
+
             },
         });
     } catch (error) {
@@ -69,10 +69,10 @@ export const register = async (req: Request, res: Response): Promise<any> => {
 }
 
 // [POST] /user/login
-export const login = async (req: Request, res: Response ): Promise<any> => {
-    const {email, password} = req.body;
- 
-    if(!email || !password){
+export const login = async (req: Request, res: Response): Promise<any> => {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
         return res.json({
             code: 404,
             message: "Yêu cầu nhập đầy đủ thông tin!"
@@ -88,14 +88,14 @@ export const login = async (req: Request, res: Response ): Promise<any> => {
         }
     });
 
-    if(!existCustomer){
+    if (!existCustomer) {
         return res.json({
             code: 404,
             message: "Không tồn tại email người dùng!"
         })
     }
 
-    if(existCustomer["password"] !== md5(password)){
+    if (existCustomer["password"] !== md5(password)) {
 
         return res.json({
             code: 404,
@@ -116,10 +116,10 @@ export const login = async (req: Request, res: Response ): Promise<any> => {
 
 
 // [GET] /user/info
-export const info = async (req: Request, res: Response ): Promise<any> => {
+export const info = async (req: Request, res: Response): Promise<any> => {
     const token = req.headers['authorization']?.split(' ')[1];
 
-    if(!token){
+    if (!token) {
         return res.json({
             code: 404,
             message: "Yêu cầu gửi token!"
@@ -136,7 +136,7 @@ export const info = async (req: Request, res: Response ): Promise<any> => {
         attributes: ["fullName", "email", "phone", "avatar"]
     });
 
-    if(!existCustomer){
+    if (!existCustomer) {
         return res.json({
             code: 404,
             message: "Không tồn tại thông tin người dùng!"
@@ -154,11 +154,11 @@ export const info = async (req: Request, res: Response ): Promise<any> => {
 
 
 // [PUT] /user/editInfo
-export const editInfo = async (req: Request, res: Response ): Promise<any> => {
+export const editInfo = async (req: Request, res: Response): Promise<any> => {
     const token = req.headers['authorization']?.split(' ')[1];
 
-    const {email, phone, fullName, avatar} = req.body;
-    if(!token){
+    const { email, phone, fullName, avatar } = req.body;
+    if (!token) {
         return res.json({
             code: 404,
             message: "Yêu cầu gửi token!"
@@ -175,21 +175,21 @@ export const editInfo = async (req: Request, res: Response ): Promise<any> => {
         attributes: ["fullName", "email", "phone", "avatar"]
     });
 
-    if(!existCustomer){
+    if (!existCustomer) {
         return res.json({
             code: 404,
             message: "Không tồn tại thông tin người dùng!"
         })
     }
-    
+
 
     await Customer.update({
         email: email || existCustomer["email"],
         phone: phone || existCustomer["phone"],
         fullName: fullName || existCustomer["fullName"],
         avatar: avatar || existCustomer["avatar"]
-    },{
-        where: {token: token}
+    }, {
+        where: { token: token }
 
     });
 
@@ -203,11 +203,10 @@ export const editInfo = async (req: Request, res: Response ): Promise<any> => {
 
 
 // [GET] /user/tourBookingHistory
-export const tourBookingHistory = async (req: Request, res: Response ): Promise<any> => {
+export const tourBookingHistory = async (req: Request, res: Response): Promise<any> => {
     const token = req.headers['authorization']?.split(' ')[1];
-    let orderItems = [];
 
-    if(!token){
+    if (!token) {
         return res.json({
             code: 404,
             message: "Yêu cầu gửi token!"
@@ -224,70 +223,47 @@ export const tourBookingHistory = async (req: Request, res: Response ): Promise<
         attributes: ["fullName", "email", "phone", "avatar", "id"]
     });
 
-    if(!existCustomer){
+    if (!existCustomer) {
         return res.json({
             code: 404,
             message: "Không tồn tại thông tin người dùng!"
         })
     }
-    
 
-    const orderUser = await Order.findOne({
-        raw: true,
-        where: {
-            email: existCustomer["email"],
-            deleted: false
+    const orderItems = await sequelize.query(
+        `
+    SELECT t.title, t.images, oi.*, o.status, ROUND(t.price * (1 - t.discount / 100), 0) AS price_special
+    FROM tours as t
+    JOIN orders_item as oi ON t.id = oi.tourId
+    JOIN orders as o ON o.id = oi.orderId
+    JOIN customers as c ON o.email = c.email
+    WHERE o.deleted = false
+    AND t.deleted = false
+    AND t.status = 'active'
+    AND o.email = '${existCustomer["email"]}' 
+    ORDER BY o.id DESC 
+    `,
+        {
+            type: QueryTypes.SELECT,
         }
-    });
+    );
 
-
-    if(!orderUser){
-        return res.json({
-            code: 404,
-            message: "Không có thông tin đơn đặt !"
-        })
-    }
-
-    if(orderUser["status"] === "pending"){
-        orderUser["status"] = "Đang xử lý";
-    }
-
-    if(orderUser["status"] === "completed"){
-        orderUser["status"] = "Đã hoàn thành";
-    }
-
-
-
-    const order_items = await orderItem.findAll({
-        raw: true,
-        where: {
-            orderId: orderUser["id"],
-
+    for (const item of orderItems) {
+        item["images"] = JSON.parse(item["images"])[0];
+        
+        if (item["status"] === "pending") {
+            item["status"] = "Đang xử lý";
         }
-    });
+        
+        if (item["status"] === "completed") {
+            item["status"] = "Đã hoàn thành";
+        }
 
-    if(order_items.length<=0){
-        return res.json({
-            code: 404,
-            message: "Không có thông tin đơn hàng !"
-        })
     }
 
-    for(let item of order_items){
-        const tour = await Tour.findOne({
-            where: {
-                id: item["tourId"],
-                deleted: false,
-                status: "active"
-            },
-            raw: true
-        });
-        item["title"] = tour["title"];
-        item["status"] = orderUser["status"];
-        item["images"] = JSON.parse(tour["images"])[0];
-        item["slug"] = tour["slug"];
-        orderItems.push(item);
-    }
+
+
+
 
     return res.json({
         code: 200,
@@ -297,16 +273,14 @@ export const tourBookingHistory = async (req: Request, res: Response ): Promise<
             orderItems
         }
     })
-
 }
 
 
 // [GET] /user/payment
-export const payment = async (req: Request, res: Response ): Promise<any> => {
+export const payment = async (req: Request, res: Response): Promise<any> => {
     const token = req.headers['authorization']?.split(' ')[1];
-    let orderItems = [];
 
-    if(!token){
+    if (!token) {
         return res.json({
             code: 404,
             message: "Yêu cầu gửi token!"
@@ -323,71 +297,47 @@ export const payment = async (req: Request, res: Response ): Promise<any> => {
         attributes: ["fullName", "email", "phone", "avatar", "id"]
     });
 
-    if(!existCustomer){
+    if (!existCustomer) {
         return res.json({
             code: 404,
             message: "Không tồn tại thông tin người dùng!"
         })
     }
-    
 
-    const orderUser = await Order.findOne({
-        raw: true,
-        where: {
-            email: existCustomer["email"],
-            deleted: false
+    const orderItems = await sequelize.query(
+        `
+    SELECT t.title, t.images, oi.*, o.status, ROUND(t.price * (1 - t.discount / 100), 0) AS price_special
+    FROM tours as t
+    JOIN orders_item as oi ON t.id = oi.tourId
+    JOIN orders as o ON o.id = oi.orderId
+    JOIN customers as c ON o.email = c.email
+    WHERE o.deleted = false
+    AND t.deleted = false
+    AND t.status = 'active'
+    AND o.email = '${existCustomer["email"]}' 
+    ORDER BY o.id DESC 
+    `,
+        {
+            type: QueryTypes.SELECT,
         }
-    });
+    );
 
-
-    if(!orderUser){
-        return res.json({
-            code: 404,
-            message: "Không có thông tin đơn đặt !"
-        })
-    }
-
-    if(orderUser["status"] === "pending"){
-        orderUser["status"] = "Đang xử lý";
-    }
-
-    if(orderUser["status"] === "completed"){
-        orderUser["status"] = "Đã hoàn thành";
-    }
-
-
-
-    const order_items = await orderItem.findAll({
-        raw: true,
-        where: {
-            orderId: orderUser["id"],
-
+    for (const item of orderItems) {
+        item["images"] = JSON.parse(item["images"])[0];
+        
+        if (item["status"] === "pending") {
+            item["status"] = "Đang xử lý";
         }
-    });
+        
+        if (item["status"] === "completed") {
+            item["status"] = "Đã hoàn thành";
+        }
 
-    if(order_items.length<=0){
-        return res.json({
-            code: 404,
-            message: "Không có thông tin đơn hàng !"
-        })
     }
 
-    for(let item of order_items){
-        const tour = await Tour.findOne({
-            where: {
-                id: item["tourId"],
-                deleted: false,
-                status: "active"
-            },
-            raw: true
-        });
-        item["title"] = tour["title"];
-        item["status"] = orderUser["status"];
-        item["images"] = JSON.parse(tour["images"])[0];
-        item["slug"] = tour["slug"];
-        item["price_special"] = parseFloat(tour["price"]) * (1- (1/parseFloat(tour["discount"])));
-        orderItems.push(item);
-    }
+
+
+
 
     return res.json({
         code: 200,
@@ -397,5 +347,4 @@ export const payment = async (req: Request, res: Response ): Promise<any> => {
             orderItems
         }
     })
-
 }
