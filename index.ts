@@ -9,6 +9,7 @@ import cookieParser from "cookie-parser";
 import session from "express-session";
 import adminRoutes from "./routes/admin/index.route";
 import * as systemConfig from "./config/system";
+import clientBeRoutes from "./routes/client/index.route";
 dotenv.config();
 
 sequelize;
@@ -17,7 +18,7 @@ const app: Express = express();
 const port: number = parseInt(process.env.PORT as string, 10) || 3000;
 
 app.use(cors({
-    origin: '192.168.55.5', 
+    origin: '*', 
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     credentials: true,
 }));
@@ -43,6 +44,7 @@ app.locals.prefixAdmin=systemConfig.prefixAdmin;
 // Client Routes
 clientRoutes(app);
 adminRoutes(app);
+
 app.listen(port, '0.0.0.0', () => {
     console.log(`App listening on port ${port}`);
 });
