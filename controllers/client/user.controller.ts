@@ -114,8 +114,8 @@ export const login = async (req: Request, res: Response ): Promise<any> => {
 
 // [GET] /user/info
 export const info = async (req: Request, res: Response ): Promise<any> => {
-    const token = req.body;
-
+    const token = req.headers['authorization']?.split(' ')[1];
+    console.log(token)
     if(!token){
         return res.json({
             code: 404,
@@ -130,7 +130,7 @@ export const info = async (req: Request, res: Response ): Promise<any> => {
             deleted: false,
             status: "active"
         },
-        attributes: ["fullName", "email", "phone", "image"]
+        attributes: ["fullName", "email", "phone", "avatar"]
     });
 
     if(!existCustomer){
