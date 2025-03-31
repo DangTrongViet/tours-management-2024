@@ -266,7 +266,7 @@ export const tourBookingHistory = async (req: Request, res: Response ): Promise<
 
     return res.json({
         code: 200,
-        message: "Chỉnh sửa thông tin thành công!",
+        message: "Lấy ra thông tin đơn hàng  thành công!",
         data: {
             tokenUser: token,
             orderItems
