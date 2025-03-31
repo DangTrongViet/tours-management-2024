@@ -1,14 +1,12 @@
 import express, { Request, Response } from "express";
-import { Op, where } from "sequelize"; // Import Sequelize operators
 import sequelize from "../../config/database"; // Import sequelize instance
 import { QueryTypes } from "sequelize"; // Import QueryTypes for raw queries
 import Customer from "../../models/customer.model";
 import md5 from "md5"
 import { generateRandomString } from "../../helpers/generate";
-import { execSync } from "child_process";
-import Order from "../../models/orders.model";
+
 import orderItem from "../../models/orders_item.model";
-import Tour from "../../models/tour.model";
+
 
 // [POST] user/register
 
@@ -346,7 +344,8 @@ export const payment = async (req: Request, res: Response): Promise<any> => {
 // [POST] /user/cancelTour
 export const cancelTour = async (req: Request, res: Response): Promise<any> => {
     const token = req.headers['authorization']?.split(' ')[1];
-    const orderId = req.body;
+    const { orderId, orderItemId } = req.body;
+
     if (!token) {
         return res.json({
             code: 404,
@@ -355,7 +354,6 @@ export const cancelTour = async (req: Request, res: Response): Promise<any> => {
     }
 
     const existCustomer = await Customer.findOne({
-        raw: true,
         where: {
             token: token,
             deleted: false,
@@ -368,14 +366,29 @@ export const cancelTour = async (req: Request, res: Response): Promise<any> => {
         return res.json({
             code: 404,
             message: "Không tồn tại thông tin người dùng!"
-        })
+        });
     }
 
-    await Order.destroy({
-        where: {
-            id: orderId
-        }
+    // Xóa orderItem bằng cách sử dụng câu lệnh SQL thuần
+    const orderItemDeleteQuery = `DELETE FROM orders_item WHERE id = :orderItemId`;
+    await sequelize.query(orderItemDeleteQuery, {
+        replacements: { orderItemId: orderItemId },
+        type: QueryTypes.DELETE
     });
+
+    // Kiểm tra xem còn mục nào trong đơn hàng không
+    const remainingItems = await orderItem.findAll({
+        where: { orderId: orderId }
+    });
+
+    // Nếu không còn mục nào, xóa toàn bộ đơn hàng
+    if (remainingItems.length === 0) {
+        const orderDeleteQuery = `DELETE FROM orders WHERE id = :orderId AND deleted = false`;
+        await sequelize.query(orderDeleteQuery, {
+            replacements: { orderId: orderId },
+            type: QueryTypes.DELETE
+        });
+    }
 
     return res.json({
         code: 200,
@@ -384,5 +397,5 @@ export const cancelTour = async (req: Request, res: Response): Promise<any> => {
             tokenUser: token,
             orderId: orderId
         }
-    })
-}
+    });
+};
