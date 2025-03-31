@@ -68,7 +68,7 @@ export const register = async (req: Request, res: Response): Promise<any> => {
 // [POST] /user/login
 export const login = async (req: Request, res: Response ): Promise<any> => {
     const {email, password} = req.body;
-
+ 
     if(!email || !password){
         return res.json({
             code: 404,
@@ -115,7 +115,7 @@ export const login = async (req: Request, res: Response ): Promise<any> => {
 // [GET] /user/info
 export const info = async (req: Request, res: Response ): Promise<any> => {
     const token = req.headers['authorization']?.split(' ')[1];
-    console.log(token)
+
     if(!token){
         return res.json({
             code: 404,
@@ -143,6 +143,56 @@ export const info = async (req: Request, res: Response ): Promise<any> => {
     return res.json({
         code: 200,
         message: "Đăng nhập thành công!",
+        data: existCustomer
+    })
+
+}
+
+
+
+// [PUT] /user/editInfo
+export const editInfo = async (req: Request, res: Response ): Promise<any> => {
+    const token = req.headers['authorization']?.split(' ')[1];
+
+    const {email, phone, fullName, avatar} = req.body;
+    if(!token){
+        return res.json({
+            code: 404,
+            message: "Yêu cầu gửi token!"
+        });
+    }
+
+    const existCustomer = await Customer.findOne({
+        raw: true,
+        where: {
+            token: token,
+            deleted: false,
+            status: "active"
+        },
+        attributes: ["fullName", "email", "phone", "avatar"]
+    });
+
+    if(!existCustomer){
+        return res.json({
+            code: 404,
+            message: "Không tồn tại thông tin người dùng!"
+        })
+    }
+    
+
+    await Customer.update({
+        email: email || existCustomer["email"],
+        phone: phone || existCustomer["phone"],
+        fullName: fullName || existCustomer["fullName"],
+        avatar: avatar || existCustomer["avatar"]
+    },{
+        where: {token: token}
+
+    });
+
+    return res.json({
+        code: 200,
+        message: "Chỉnh sửa thông tin thành công!",
         data: existCustomer
     })
 
