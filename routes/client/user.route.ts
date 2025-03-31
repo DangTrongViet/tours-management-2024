@@ -11,6 +11,6 @@ router.put("/editInfo",controller.editInfo);
 
 router.get("/tourBookingHistory", controller.tourBookingHistory)
 router.get("/payment", controller.payment);
-router.delete("/cancelTour", controller.cancelTour);
-
+router.put("/cancelTour", controller.cancelTour);
+router.put("/paymentPost", controller.paymentPost);
 export const userRoute: Router = router;
