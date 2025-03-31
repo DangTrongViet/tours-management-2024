@@ -385,6 +385,7 @@ export const payment = async (req: Request, res: Response ): Promise<any> => {
         item["status"] = orderUser["status"];
         item["images"] = JSON.parse(tour["images"])[0];
         item["slug"] = tour["slug"];
+        item["price_special"] = parseFloat(tour["price"]) * (1- (1/parseFloat(tour["discount"])));
         orderItems.push(item);
     }
 
