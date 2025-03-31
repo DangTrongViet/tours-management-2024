@@ -203,11 +203,10 @@ export const editInfo = async (req: Request, res: Response ): Promise<any> => {
 
 
 // [GET] /user/tourBookingHistory
-
 export const tourBookingHistory = async (req: Request, res: Response ): Promise<any> => {
     const token = req.headers['authorization']?.split(' ')[1];
     let orderItems = [];
-    
+
     if(!token){
         return res.json({
             code: 404,
@@ -222,7 +221,7 @@ export const tourBookingHistory = async (req: Request, res: Response ): Promise<
             deleted: false,
             status: "active"
         },
-        attributes: ["fullName", "email", "phone", "avatar"]
+        attributes: ["fullName", "email", "phone", "avatar", "id"]
     });
 
     if(!existCustomer){
@@ -241,6 +240,24 @@ export const tourBookingHistory = async (req: Request, res: Response ): Promise<
         }
     });
 
+
+    if(!orderUser){
+        return res.json({
+            code: 404,
+            message: "Không có thông tin đơn đặt !"
+        })
+    }
+
+    if(orderUser["status"] === "pending"){
+        orderUser["status"] = "Đang xử lý";
+    }
+
+    if(orderUser["status"] === "completed"){
+        orderUser["status"] = "Đã hoàn thành";
+    }
+
+
+
     const order_items = await orderItem.findAll({
         raw: true,
         where: {
@@ -248,6 +265,13 @@ export const tourBookingHistory = async (req: Request, res: Response ): Promise<
 
         }
     });
+
+    if(order_items.length<=0){
+        return res.json({
+            code: 404,
+            message: "Không có thông tin đơn hàng !"
+        })
+    }
 
     for(let item of order_items){
         const tour = await Tour.findOne({
@@ -260,7 +284,107 @@ export const tourBookingHistory = async (req: Request, res: Response ): Promise<
         });
         item["title"] = tour["title"];
         item["status"] = orderUser["status"];
+        item["images"] = JSON.parse(tour["images"])[0];
+        item["slug"] = tour["slug"];
+        orderItems.push(item);
+    }
 
+    return res.json({
+        code: 200,
+        message: "Lấy ra thông tin đơn hàng  thành công!",
+        data: {
+            tokenUser: token,
+            orderItems
+        }
+    })
+
+}
+
+
+// [GET] /user/payment
+export const payment = async (req: Request, res: Response ): Promise<any> => {
+    const token = req.headers['authorization']?.split(' ')[1];
+    let orderItems = [];
+
+    if(!token){
+        return res.json({
+            code: 404,
+            message: "Yêu cầu gửi token!"
+        });
+    }
+
+    const existCustomer = await Customer.findOne({
+        raw: true,
+        where: {
+            token: token,
+            deleted: false,
+            status: "active"
+        },
+        attributes: ["fullName", "email", "phone", "avatar", "id"]
+    });
+
+    if(!existCustomer){
+        return res.json({
+            code: 404,
+            message: "Không tồn tại thông tin người dùng!"
+        })
+    }
+    
+
+    const orderUser = await Order.findOne({
+        raw: true,
+        where: {
+            email: existCustomer["email"],
+            deleted: false
+        }
+    });
+
+
+    if(!orderUser){
+        return res.json({
+            code: 404,
+            message: "Không có thông tin đơn đặt !"
+        })
+    }
+
+    if(orderUser["status"] === "pending"){
+        orderUser["status"] = "Đang xử lý";
+    }
+
+    if(orderUser["status"] === "completed"){
+        orderUser["status"] = "Đã hoàn thành";
+    }
+
+
+
+    const order_items = await orderItem.findAll({
+        raw: true,
+        where: {
+            orderId: orderUser["id"],
+
+        }
+    });
+
+    if(order_items.length<=0){
+        return res.json({
+            code: 404,
+            message: "Không có thông tin đơn hàng !"
+        })
+    }
+
+    for(let item of order_items){
+        const tour = await Tour.findOne({
+            where: {
+                id: item["tourId"],
+                deleted: false,
+                status: "active"
+            },
+            raw: true
+        });
+        item["title"] = tour["title"];
+        item["status"] = orderUser["status"];
+        item["images"] = JSON.parse(tour["images"])[0];
+        item["slug"] = tour["slug"];
         orderItems.push(item);
     }
 
