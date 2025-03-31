@@ -261,10 +261,6 @@ export const tourBookingHistory = async (req: Request, res: Response): Promise<a
 
     }
 
-
-
-
-
     return res.json({
         code: 200,
         message: "Lấy ra thông tin đơn hàng  thành công!",
@@ -337,14 +333,56 @@ export const payment = async (req: Request, res: Response): Promise<any> => {
 
 
 
-
-
     return res.json({
         code: 200,
         message: "Lấy ra thông tin đơn hàng  thành công!",
         data: {
             tokenUser: token,
             orderItems
+        }
+    })
+}
+
+// [POST] /user/cancelTour
+export const cancelTour = async (req: Request, res: Response): Promise<any> => {
+    const token = req.headers['authorization']?.split(' ')[1];
+    const orderId = req.body;
+    if (!token) {
+        return res.json({
+            code: 404,
+            message: "Yêu cầu gửi token!"
+        });
+    }
+
+    const existCustomer = await Customer.findOne({
+        raw: true,
+        where: {
+            token: token,
+            deleted: false,
+            status: "active"
+        },
+        attributes: ["fullName", "email", "phone", "avatar", "id"]
+    });
+
+    if (!existCustomer) {
+        return res.json({
+            code: 404,
+            message: "Không tồn tại thông tin người dùng!"
+        })
+    }
+
+    await Order.destroy({
+        where: {
+            id: orderId
+        }
+    });
+
+    return res.json({
+        code: 200,
+        message: "Đã hủy tour thành công!",
+        data: {
+            tokenUser: token,
+            orderId: orderId
         }
     })
 }
