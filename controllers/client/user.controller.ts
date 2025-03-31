@@ -6,6 +6,9 @@ import Customer from "../../models/customer.model";
 import md5 from "md5"
 import { generateRandomString } from "../../helpers/generate";
 import { execSync } from "child_process";
+import Order from "../../models/orders.model";
+import orderItem from "../../models/orders_item.model";
+import Tour from "../../models/tour.model";
 
 // [POST] user/register
 
@@ -194,6 +197,80 @@ export const editInfo = async (req: Request, res: Response ): Promise<any> => {
         code: 200,
         message: "Chỉnh sửa thông tin thành công!",
         data: existCustomer
+    })
+
+}
+
+
+// [GET] /user/tourBookingHistory
+
+export const tourBookingHistory = async (req: Request, res: Response ): Promise<any> => {
+    const token = req.headers['authorization']?.split(' ')[1];
+    let orderItems = [];
+    
+    if(!token){
+        return res.json({
+            code: 404,
+            message: "Yêu cầu gửi token!"
+        });
+    }
+
+    const existCustomer = await Customer.findOne({
+        raw: true,
+        where: {
+            token: token,
+            deleted: false,
+            status: "active"
+        },
+        attributes: ["fullName", "email", "phone", "avatar"]
+    });
+
+    if(!existCustomer){
+        return res.json({
+            code: 404,
+            message: "Không tồn tại thông tin người dùng!"
+        })
+    }
+    
+
+    const orderUser = await Order.findOne({
+        raw: true,
+        where: {
+            email: existCustomer["email"],
+            deleted: false
+        }
+    });
+
+    const order_items = await orderItem.findAll({
+        raw: true,
+        where: {
+            orderId: orderUser["id"],
+
+        }
+    });
+
+    for(let item of order_items){
+        const tour = await Tour.findOne({
+            where: {
+                id: item["tourId"],
+                deleted: false,
+                status: "active"
+            },
+            raw: true
+        });
+        item["title"] = tour["title"];
+        item["status"] = orderUser["status"];
+
+        orderItems.push(item);
+    }
+
+    return res.json({
+        code: 200,
+        message: "Chỉnh sửa thông tin thành công!",
+        data: {
+            tokenUser: token,
+            orderItems
+        }
     })
 
 }
