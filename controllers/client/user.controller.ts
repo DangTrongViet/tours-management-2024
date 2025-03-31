@@ -7,7 +7,7 @@ import md5 from "md5"
 import { generateRandomString } from "../../helpers/generate";
 import { execSync } from "child_process";
 
-// [POST] user
+// [POST] user/register
 
 export const register = async (req: Request, res: Response): Promise<any> => {
     const userInfo = req.body; 
@@ -65,7 +65,7 @@ export const register = async (req: Request, res: Response): Promise<any> => {
     }
 }
 
-
+// [POST] /user/login
 export const login = async (req: Request, res: Response ): Promise<any> => {
     const {email, password} = req.body;
 
@@ -103,7 +103,47 @@ export const login = async (req: Request, res: Response ): Promise<any> => {
     return res.json({
         code: 200,
         message: "Đăng nhập thành công!",
-        tokenUser: existCustomer["token"]
+        data: {
+            tokenUser: existCustomer["token"],
+            role: existCustomer["role"]
+        }
+    })
+
+}
+
+
+// [GET] /user/info
+export const info = async (req: Request, res: Response ): Promise<any> => {
+    const token = req.body;
+
+    if(!token){
+        return res.json({
+            code: 404,
+            message: "Yêu cầu gửi token!"
+        });
+    }
+
+    const existCustomer = await Customer.findOne({
+        raw: true,
+        where: {
+            token: token,
+            deleted: false,
+            status: "active"
+        },
+        attributes: ["fullName", "email", "phone", "image"]
+    });
+
+    if(!existCustomer){
+        return res.json({
+            code: 404,
+            message: "Không tồn tại thông tin người dùng!"
+        })
+    }
+
+    return res.json({
+        code: 200,
+        message: "Đăng nhập thành công!",
+        data: existCustomer
     })
 
 }
