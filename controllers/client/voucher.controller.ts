@@ -3,17 +3,18 @@ import { Op } from "sequelize"; // Import Sequelize operators
 import sequelize from "../../config/database"; // Import sequelize instance
 import { QueryTypes } from "sequelize"; // Import QueryTypes for raw queries
 
-// [GET] customers
+// [GET] vouchers
 export const index = async (req: Request, res: Response) => {
     try {
 
         // Truy vấn tour từ cơ sở dữ liệu với JOIN
-        const customers = await sequelize.query(
+        const vouchers = await sequelize.query(
             `
       SELECT *
-      FROM customers
-        WHERE status = "active"
-        AND deleted = falss
+      FROM vouchers
+        WHERE 
+            deleted = false
+            
 
       `,
             {
@@ -26,13 +27,13 @@ export const index = async (req: Request, res: Response) => {
         res.json({
             code: 200,
             message: "Danh sách vouchers đã được lấy thành công",
-            data: customers,
+            data: vouchers,
         });
     } catch (error) {
         console.error(error);
         res.status(500).json({
             code: 500,
-            message: "Đã xảy ra lỗi khi lấy danh sách customers",
+            message: "Đã xảy ra lỗi khi lấy danh sách vouchers",
             error: error.message,
         });
     }

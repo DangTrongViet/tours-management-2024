@@ -4,8 +4,6 @@ import sequelize from "../../config/database"; // Import sequelize instance
 import { QueryTypes } from "sequelize"; // Import QueryTypes for raw queries
 import Category from "../../models/category.model";
 
-const router = express.Router();
-
 // [GET] categories
 export const index = async (req: Request, res: Response) => {
     try {

@@ -4,7 +4,6 @@ import sequelize from "../../config/database"; // Import sequelize instance
 import { QueryTypes } from "sequelize"; // Import QueryTypes for raw queries
 import dayjs from "dayjs"
 import Voucher from "../../models/voucher.model";
-const router = express.Router();
 
 // [GET] vouchers
 export const index = async (req: Request, res: Response) => {
@@ -136,4 +135,4 @@ export const updateVoucher = async (req: Request, res: Response): Promise<any> =
         });
     }
 };
-export default router;
+
