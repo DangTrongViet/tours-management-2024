@@ -40,8 +40,8 @@ export const register = async (req: Request, res: Response): Promise<any> => {
 
         }
 
-        const tokenUser = generateRandomString(10);
-        const customer = await Customer.create({
+        const tokenUser = generateRandomString(21);
+        await Customer.create({
             fullName: userInfo.fullName,
             email: userInfo.email,
             phone: userInfo.phone,
@@ -71,7 +71,7 @@ export const register = async (req: Request, res: Response): Promise<any> => {
 // [POST] /user/login
 export const login = async (req: Request, res: Response): Promise<any> => {
     const { email, password } = req.body;
-
+    console.log(password);
     if (!email || !password) {
         return res.json({
             code: 404,
@@ -232,16 +232,16 @@ export const tourBookingHistory = async (req: Request, res: Response): Promise<a
 
     const orderItems = await sequelize.query(
         `
-    SELECT t.title, t.images, oi.*, o.status, ROUND(t.price * (1 - t.discount / 100), 0) AS price_special
+    SELECT t.title, t.images, oi.* , ROUND(t.price * (1 - t.discount / 100), 0) AS price_special
     FROM tours as t
     JOIN orders_item as oi ON t.id = oi.tourId
     JOIN orders as o ON o.id = oi.orderId
     JOIN customers as c ON o.email = c.email
-    WHERE o.oi = false
+    WHERE oi.deleted = false
     AND t.deleted = false
     AND t.status = 'active'
     AND o.email = '${existCustomer["email"]}' 
-    ORDER BY o.id DESC 
+    ORDER BY oi.id DESC 
     `,
         {
             type: QueryTypes.SELECT,
@@ -249,6 +249,9 @@ export const tourBookingHistory = async (req: Request, res: Response): Promise<a
     );
 
     for (const item of orderItems) {
+        if (item["status"] === null) {
+            item["status"] = "pending"
+        }
         item["images"] = JSON.parse(item["images"])[0];
 
         if (item["status"] === "pending") {
@@ -302,7 +305,7 @@ export const payment = async (req: Request, res: Response): Promise<any> => {
 
     const orderItems = await sequelize.query(
         `
-    SELECT t.title, t.images, oi.*, o.status, ROUND(t.price * (1 - t.discount / 100), 0) AS price_special
+    SELECT t.title, t.images, oi.*, ROUND(t.price * (1 - t.discount / 100), 0) AS price_special
     FROM tours as t
     JOIN orders_item as oi ON t.id = oi.tourId
     JOIN orders as o ON o.id = oi.orderId
@@ -319,6 +322,9 @@ export const payment = async (req: Request, res: Response): Promise<any> => {
     );
 
     for (const item of orderItems) {
+        if (item["status"] === null) {
+            item["status"] = "pending"
+        }
         item["images"] = JSON.parse(item["images"])[0];
 
         if (item["status"] === "pending") {
@@ -371,6 +377,27 @@ export const cancelTour = async (req: Request, res: Response): Promise<any> => {
         })
     }
 
+    const oi = await orderItem.findOne({
+        raw: true,
+        where: {
+            id: orderItemId,
+            deleted: false
+        }
+    })
+
+    const tour = await Tour.findOne({
+        raw: true,
+        where: {
+            id: oi["tourId"],
+            deleted: false,
+            status: "active"
+        }
+    });
+
+    await tour.update({
+        stock: tour["stock"] + oi["quantity"] 
+    })
+
     await orderItem.update(
         { deleted: true },  // Dữ liệu cần cập nhật
         { where: { id: orderItemId } }  // Điều kiện cập nhật
@@ -404,6 +431,7 @@ export const cancelTour = async (req: Request, res: Response): Promise<any> => {
 export const paymentPost = async (req: Request, res: Response): Promise<any> => {
     const token = req.headers['authorization']?.split(' ')[1];
     const orderItemsId = req.body.orderItemsId;
+    let odI = [];
     if (!token) {
         return res.json({
             code: 404,
@@ -442,13 +470,14 @@ export const paymentPost = async (req: Request, res: Response): Promise<any> => 
                 token: token
             })
         }
-        await oi.update({
+        const item = await oi.update({
             paymentDate: Date.now(),
             status: "completed"
         },
             {
                 where: { id: id }
             })
+        odI.push(item)
     }
 
     return res.json({
@@ -456,7 +485,160 @@ export const paymentPost = async (req: Request, res: Response): Promise<any> => 
         message: "Đã thanh toán thành công!",
         data: {
             tokenUser: token,
-            orderItemsId: orderItemsId 
+            orderItems: odI
         }
     })
 }
+
+// [GET] user/paymentSuccess
+export const paymentSuccess = async (req: Request, res: Response): Promise<any> => {
+    const token = req.headers['authorization']?.split(' ')[1];
+    let odI = [];
+    if (!token) {
+        return res.json({
+            code: 404,
+            message: "Yêu cầu gửi token!"
+        });
+    }
+
+    const existCustomer = await Customer.findOne({
+        raw: true,
+        where: {
+            token: token,
+            deleted: false,
+            status: "active"
+        },
+        attributes: ["fullName", "email", "phone", "avatar", "id"]
+    });
+
+    if (!existCustomer) {
+        return res.json({
+            code: 404,
+            message: "Không tồn tại thông tin người dùng!"
+        })
+    }
+
+    const orderItems = await sequelize.query(
+        `
+    SELECT t.title, t.images, oi.*, ROUND(t.price * (1 - t.discount / 100), 0) AS price_special
+    FROM tours as t
+    JOIN orders_item as oi ON t.id = oi.tourId
+    JOIN orders as o ON o.id = oi.orderId
+    JOIN customers as c ON o.email = c.email
+    WHERE oi.deleted = false
+    AND oi.status = "completed"
+    AND t.deleted = false
+    AND t.status = 'active'
+    AND o.email = '${existCustomer["email"]}' 
+    ORDER BY oi.id DESC 
+    `,
+        {
+            type: QueryTypes.SELECT,
+        }
+    );
+
+
+    for (const item of orderItems) {
+        item["images"] = JSON.parse(item["images"])[0];
+    }
+
+
+    return res.json({
+        code: 200,
+        message: "Đã thanh toán thành công!",
+        data: {
+            tokenUser: token,
+            orderItems: orderItems
+        }
+    })
+}
+
+export const refundMoney = async (req: Request, res: Response): Promise<any> => {
+    const token = req.headers['authorization']?.split(' ')[1];
+    const orderItemId = req.body.orderItemId;
+    // Check for token in the request headers
+    if (!token) {
+        return res.json({
+            code: 404,
+            message: "Yêu cầu gửi token!"
+        });
+    }
+
+    try {
+        // Check if the customer exists
+        const existCustomer = await Customer.findOne({
+            raw: true,
+            where: {
+                token: token,
+                deleted: false,
+                status: "active"
+            },
+            attributes: ["fullName", "email", "phone", "avatar", "id"]
+        });
+
+        if (!existCustomer) {
+            return res.json({
+                code: 404,
+                message: "Không tồn tại thông tin người dùng!"
+            });
+        }
+
+        // Check if the order item exists
+        const oi = await orderItem.findOne({
+            where: {
+                deleted: false,
+                status: "completed",
+                id: orderItemId
+            }
+        });
+
+        if (!oi) {
+            return res.json({
+                code: 404,
+                message: `Không có thông tin đơn hàng ${orderItemId}!`,
+                token: token
+            });
+        }
+
+        // Get the payment date and calculate the time difference in days
+        const paymentDate = new Date(oi["paymentDate"]);
+        const currentDate = new Date();
+        const daysDifference = (currentDate.getTime() - paymentDate.getTime()) / (1000 * 3600 * 24);
+
+        // If the difference is greater than 3 days, do not allow a refund
+        if (daysDifference > 3) {
+            return res.json({
+                code: 404,
+                message: "Không thể hoàn tiền!",
+            
+            });
+        }
+
+       
+        const item = await oi.update({
+            refund_date: Date.now(),
+            status: "refund completed"
+        },
+        {
+            where: { id: orderItemId }
+        });
+
+        // Return success response
+        return res.json({
+            code: 200,
+            message: "Đã hoàn tiền thành công!",
+            data: {
+                tokenUser: token,
+                orderItem: item
+            }
+        });
+
+    } catch (error) {
+        // Handle unexpected errors
+        console.error(error);
+        return res.json({
+            code: 500,
+            message: "Đã có lỗi xảy ra. Vui lòng thử lại sau!"
+        });
+    }
+};

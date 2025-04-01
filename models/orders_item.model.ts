@@ -39,6 +39,14 @@ const orderItem = sequelize.define("orderItem", {
         type: DataTypes.DATE,
         allowNull: true,  
     },
+    deleted: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false, 
+    },
+    status: {
+        type: DataTypes.STRING(20),
+        allowNull: true
+    }
 }, {
     tableName: 'orders_item',
     timestamps: false // Tự động quản lý createAt, updateAt

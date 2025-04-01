@@ -21,11 +21,20 @@ export const order = async (req: Request, res: Response): Promise<any> => {
     const transaction = await sequelize.transaction(); // Start transaction
 
     try {
-        // Create the order
+        // Fetch current order index from order_counters table
+        const orderCounter = await Order.findOne({
+            where: { id: 1 }, // Assuming you store a single counter
+            transaction
+        });
+
+        let index = orderCounter ? orderCounter["index"] : 0; // Get the current index or start from 0
+
+        // Create the order with a generated code
         const order = await Order.create({
             email: customerInfo.email,
             phone: customerInfo.phone,
             fullName: customerInfo.fullName,
+            code: "ORD000" + index, // Generate order code with index
             note: customerInfo.note || "",
             status: status
         }, { transaction });
@@ -40,13 +49,23 @@ export const order = async (req: Request, res: Response): Promise<any> => {
                     status: "active"
                 },
                 raw: true,
-                transaction // Include the transaction here
+                transaction
             });
 
             if (!tour) {
                 // If tour not found or inactive, throw an error
                 throw new Error(`Tour with ID ${item.id} not found or is inactive`);
             }
+
+            // Check if the quantity in the cart exceeds available stock
+            if (item.quantity > tour["stock"]) {
+                throw new Error(`Không đủ số lượng cho tour "${tour["title"]}"`);
+            }
+
+            // Update tour stock
+            await tour.update({
+                stock: tour["stock"] - item.quantity
+            }, { transaction });
 
             // Create orderItem entry for each cart item
             await orderItem.create({
@@ -58,6 +77,12 @@ export const order = async (req: Request, res: Response): Promise<any> => {
                 timeStart: Date.now(),
             }, { transaction });
         }
+
+        // After all actions, update the order counter to increment the index
+        await Order.update(
+            { index: index + 1 },
+            { where: { id: 1 }, transaction }
+        );
 
         // Commit the transaction after all actions are completed
         await transaction.commit();
@@ -81,3 +106,4 @@ export const order = async (req: Request, res: Response): Promise<any> => {
         });
     }
 };
+

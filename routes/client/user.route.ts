@@ -13,4 +13,6 @@ router.get("/tourBookingHistory", controller.tourBookingHistory)
 router.get("/payment", controller.payment);
 router.put("/cancelTour", controller.cancelTour);
 router.put("/paymentPost", controller.paymentPost);
+router.get("/paymentSuccess", controller.paymentSuccess);
+router.put("/refundMoney", controller.refundMoney);
 export const userRoute: Router = router;

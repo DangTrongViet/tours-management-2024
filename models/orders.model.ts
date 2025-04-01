@@ -47,6 +47,7 @@ const Order = sequelize.define("order", {
         type: DataTypes.DATE,
         defaultValue: DataTypes.NOW,
     },
+
 }, {
     tableName: 'orders',
     timestamps: true, 
